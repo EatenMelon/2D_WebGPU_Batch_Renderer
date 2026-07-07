@@ -1,0 +1,18 @@
+Changing the state of the GPU is a heavy task, so remaining the state of the GPU for as long as possible boost performance.
+
+A batch renderer does this by collecting all render commands in a sorted collection, instead of rendering instantly,
+these are executed later per render state, which reduces redundant GPU state switches.
+
+simple summary for easy understanding for implemetations:
+
+batch renderer:
+	- batch = unordered_map<key, vector<render command>>
+		* key => describes the GPU state required to render a group of commands
+          		 (pipeline/shader, textures, blend mode, etc.)
+				=> easy solution: use the pointer to the material for this
+				(only works when materials don't change at runtime or at least not during a frame)
+
+		* command => contains your vertex information
+
+	- the draw calls don't drawn instantly, they fill up the batch
+	- batch get rendered and flushed afterwards
