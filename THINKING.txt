@@ -1,4 +1,6 @@
-Changing the state of the GPU is a heavy task, so remaining the state of the GPU for as long as possible boost performance.
+--- Batch renderer implementation ---
+
+Changing the state of the GPU is a heavy task, so remaining the state of the GPU for as long as possible boosts performance.
 
 A batch renderer does this by collecting all render commands in a sorted collection, instead of rendering instantly,
 these are executed later per render state, which reduces redundant GPU state switches.
@@ -16,3 +18,39 @@ batch renderer:
 
 	- the draw calls don't drawn instantly, they fill up the batch
 	- batch get rendered and flushed afterwards
+
+--- Material, shader, pipeline implementation ---
+
+Objects are rendered using materials.
+A material is rendered using a pipeline, and must provide resources matching the pipeline's bind group layout.
+A pipeline combines a shader, vertex layout, bind group layout(s), and render state into a GPU object that can render primitives.
+
+
+so to clearify:
+
+- shader needs:
+	* WGSL source, a file or raw string code
+	* shader modules
+
+- pipeline needs:
+	* shader
+	* vertex layout		(-)
+	* bindgroup layout
+	* blend state		(-)
+	* depth state		(-)
+	(* primitive state, this normally doesn't differ much across pipelines so (-) )
+
+- Material needs:
+	* Pipeline (or enough information to create a compatible bind group)
+	* uniform buffer (can be more than one, but I'll be forcing one)
+	* Textures
+	* Samplers
+	* bind group
+
+(The bind group contains which resources are currently bound.)
+
+The things marked with (-) will be the same for each object.
+	* I want to enforce the vertex layouts of all my shaders, so this will be the same across pipelines, 
+	  even though it might use redundant memory (which i don't think is an issue for a 2D renderer)
+	* The blend state will also be same across objects, just to keep things simple for me.
+	* The depth state is what I'll use for layering objects, won't be too different from a normal depth buffer.
