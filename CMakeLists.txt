@@ -15,6 +15,10 @@ add_executable(${PROJECT_NAME}
 	"${SRC_DIR}/main.cpp"
 	"${SRC_DIR}/Renderer2D.cpp"
 	"${SRC_DIR}/GraphicsContext.cpp"
+	"${SRC_DIR}/Shader.cpp"
+	"${SRC_DIR}/Pipeline.cpp"
+	"${SRC_DIR}/DataTypes.cpp"
+	"${SRC_DIR}/BindGroupLayout.cpp"
 )
 
 # include directories
