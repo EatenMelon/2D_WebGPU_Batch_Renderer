@@ -7,13 +7,13 @@
 std::unique_ptr<wgpu::Shader> g_Shader{ nullptr };
 std::unique_ptr<wgpu::Pipeline> g_Pipeline{ nullptr };
 
-static void TestRenderCallback(WGPURenderPassEncoder renderPass)
-{
-	// Select which render pipeline to use
-	wgpuRenderPassEncoderSetPipeline(renderPass, g_Pipeline->GetPipeline());
-	// Draw 1 instance of a 3-vertices shape
-	wgpuRenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
-}
+//static void TestRenderCallback(WGPURenderPassEncoder renderPass)
+//{
+//	// Select which render pipeline to use
+//	wgpuRenderPassEncoderSetPipeline(renderPass, g_Pipeline->GetPipeline());
+//	// Draw 1 instance of a 3-vertices shape
+//	wgpuRenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
+//}
 
 static void InitRenderResources(const wgpu::Renderer2D& renderer)
 {
@@ -46,7 +46,7 @@ int main()
 			isRunning = event.type != SDL_EVENT_QUIT;
 		}
 
-		renderer.Render(TestRenderCallback);
+		renderer.Render();
 	}
 	renderer.Quit();
 

@@ -19,6 +19,8 @@ add_executable(${PROJECT_NAME}
 	"${SRC_DIR}/Pipeline.cpp"
 	"${SRC_DIR}/DataTypes.cpp"
 	"${SRC_DIR}/BindGroupLayout.cpp"
+	"${SRC_DIR}/RenderQueue.cpp"
+	"${SRC_DIR}/Material.cpp"
 )
 
 # include directories

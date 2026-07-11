@@ -7,6 +7,8 @@ bool wgpu::Renderer2D::Init(SDL_Window* window)
 	try
 	{
 		m_Context = std::make_unique<GraphicsContext>(window);
+		m_RenderQueue = std::make_unique<RenderQueue>();
+		CreateVertexBuffer(100);
 	}
 	catch (const std::exception& ex)
 	{
@@ -17,7 +19,37 @@ bool wgpu::Renderer2D::Init(SDL_Window* window)
 	return true;
 }
 
-void wgpu::Renderer2D::Render(const std::function<void(WGPURenderPassEncoder)>& renderFunc) const
+void wgpu::Renderer2D::BeginFrame()
+{
+	m_RenderQueue->Flush();
+
+	// clear the vertex buffer
+	WGPUCommandEncoderDescriptor desc{};
+	WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &desc);
+
+	wgpuCommandEncoderClearBuffer(encoder, m_VertexBuffer.buffer, 0, 0);
+
+	WGPUCommandBufferDescriptor cmdDesc{};
+	WGPUCommandBuffer cmd = wgpuCommandEncoderFinish(encoder, &cmdDesc);
+
+	wgpuQueueSubmit(m_Context->GetQueue(), 1, &cmd);
+
+	wgpuCommandBufferRelease(cmd);
+	wgpuCommandEncoderRelease(encoder);
+}
+
+void wgpu::Renderer2D::EndFrame()
+{
+	size_t bufferSize = m_RenderQueue->GetBufferSize();
+
+	if (m_VertexBuffer.capacity < bufferSize)
+	{
+		CreateVertexBuffer(bufferSize * 2);
+	}
+
+}
+
+void wgpu::Renderer2D::Render() const
 {
 	// get the next target texture view
 	auto [surfaceTexture, targetView] = GetNextSurfaceViewData();
@@ -49,7 +81,6 @@ void wgpu::Renderer2D::Render(const std::function<void(WGPURenderPassEncoder)>& 
 
 		// use render pass
 		// -> Render objects here!
-		renderFunc(renderPass);
 
 		// end renderpass
 		wgpuRenderPassEncoderEnd(renderPass);
@@ -73,6 +104,10 @@ void wgpu::Renderer2D::Render(const std::function<void(WGPURenderPassEncoder)>& 
 
 void wgpu::Renderer2D::Quit()
 {
+	wgpuBufferRelease(m_VertexBuffer.buffer);
+	m_VertexBuffer.buffer = nullptr;
+	m_VertexBuffer.capacity = 0;
+
 	m_Context.reset();
 }
 
@@ -106,4 +141,15 @@ std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceV
 	WGPUTextureView targetView = wgpuTextureCreateView(surfaceTexture.texture, &viewDescriptor);
 
 	return { surfaceTexture, targetView };
+}
+
+void wgpu::Renderer2D::CreateVertexBuffer(size_t capacity)
+{
+	WGPUBufferDescriptor desc{};
+	desc.size = capacity;
+	desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex;
+	desc.mappedAtCreation = false;
+
+	m_VertexBuffer.buffer = wgpuDeviceCreateBuffer(m_Context->GetDevice(), &desc);
+	m_VertexBuffer.capacity = capacity;
 }

@@ -6,7 +6,7 @@
 
 namespace wgpu
 {
-	class Pipeline
+	class Pipeline final
 	{
 	public:
 		Pipeline(const Shader& shader, const BindGroupLayout* bindGroupLayout = nullptr);
