@@ -17,7 +17,7 @@ bool wgpu::Renderer2D::Init(SDL_Window* window)
 	return true;
 }
 
-void wgpu::Renderer2D::Render() const
+void wgpu::Renderer2D::Render(const std::function<void(WGPURenderPassEncoder)>& renderFunc) const
 {
 	// get the next target texture view
 	auto [surfaceTexture, targetView] = GetNextSurfaceViewData();
@@ -49,6 +49,7 @@ void wgpu::Renderer2D::Render() const
 
 		// use render pass
 		// -> Render objects here!
+		renderFunc(renderPass);
 
 		// end renderpass
 		wgpuRenderPassEncoderEnd(renderPass);

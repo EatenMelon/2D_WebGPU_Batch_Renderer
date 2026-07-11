@@ -2,7 +2,7 @@
 #define BINDGROUP_LAYOUT
 
 #include <unordered_map>
-#include <webgpu/webgpu.h>
+#include "GraphicsContext.h"
 
 namespace wgpu
 {
@@ -21,14 +21,24 @@ namespace wgpu
 		template<typename T>
 		bool AddUniformEntry(int binding, BindingVisibility visibility);
 
+		template<typename T>
+		bool HasUniformEntry(int binding);
+
 		void ClearEntries();
 		void RemoveEntry(int binding);
+
+		void ConfirmLayout(const GraphicsContext& context);
+
+		WGPUBindGroupLayout GetLayout() const { return m_BindGroupLayout; }
+		const GraphicsContext* GetGraphicsContext() const { return m_Context; }
 
 	private:
 		WGPUShaderStage GetShaderStage(BindingVisibility visibility);
 
-		std::unordered_map<int, WGPUBindGroupLayoutEntry> m_Entries{};
+		WGPUBindGroupLayout m_BindGroupLayout{ nullptr };
 
+		std::unordered_map<int, WGPUBindGroupLayoutEntry> m_Entries{};
+		const GraphicsContext* m_Context{ nullptr };
 	};
 
 	// could be moved to a .inl file, which is a type of header file for inline functions
@@ -49,6 +59,16 @@ namespace wgpu
 		newEntry.buffer.minBindingSize = sizeof(T);
 
 		return true;
+	}
+
+	template<typename T>
+	inline bool BindGroupLayout::HasUniformEntry(int binding)
+	{
+		if (!m_Entries.contains(binding)) return false;
+
+		auto itr = m_Entries.find(binding);
+
+		return itr->second.buffer.minBindingSize == sizeof(T);
 	}
 }
 

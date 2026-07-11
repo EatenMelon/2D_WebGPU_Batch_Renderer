@@ -2,6 +2,7 @@
 #define _SHADER
 
 #include <filesystem>
+
 #include "GraphicsContext.h"
 
 namespace wgpu
@@ -22,6 +23,7 @@ namespace wgpu
 
 	private:
 		WGPUShaderModule m_ShaderModule{ nullptr };
+
 		const GraphicsContext* m_Context{ nullptr };
 	};
 }

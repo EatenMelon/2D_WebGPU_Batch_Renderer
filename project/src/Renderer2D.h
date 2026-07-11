@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <utility>
+#include <functional>
 
 #include "GraphicsContext.h"
 
@@ -15,7 +16,7 @@ namespace wgpu
 	{
 	public:
 		bool Init(SDL_Window* window);
-		void Render() const;
+		void Render(const std::function<void(WGPURenderPassEncoder)>& renderFunc) const;
 		void Quit();
 
 		void SetClearColor(float r, float g, float b, float a = 1.f);

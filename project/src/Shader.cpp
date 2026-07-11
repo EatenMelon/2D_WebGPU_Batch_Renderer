@@ -23,8 +23,6 @@ wgpu::Shader::Shader(const GraphicsContext& context, const std::filesystem::path
     shaderCodeDesc.code = WGPUStringView(shaderSource.c_str(), shaderSource.size());
 
     WGPUShaderModuleDescriptor shaderDesc{};
-    shaderDesc.nextInChain = nullptr;
-
     shaderDesc.nextInChain = &shaderCodeDesc.chain;
 
     m_ShaderModule = wgpuDeviceCreateShaderModule(m_Context->GetDevice(), &shaderDesc);
