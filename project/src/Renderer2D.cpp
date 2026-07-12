@@ -8,7 +8,7 @@ bool wgpu::Renderer2D::Init(SDL_Window* window)
 	{
 		m_Context = std::make_unique<GraphicsContext>(window);
 		m_RenderQueue = std::make_unique<RenderQueue>();
-		CreateVertexBuffer(100);
+		CreateVertexBuffer(100 * sizeof(Vertex));
 	}
 	catch (const std::exception& ex)
 	{
@@ -27,7 +27,7 @@ void wgpu::Renderer2D::BeginFrame()
 	WGPUCommandEncoderDescriptor desc{};
 	WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &desc);
 
-	wgpuCommandEncoderClearBuffer(encoder, m_VertexBuffer.buffer, 0, 0);
+	wgpuCommandEncoderClearBuffer(encoder, m_VertexBuffer.buffer, 0, WGPU_WHOLE_SIZE);
 
 	WGPUCommandBufferDescriptor cmdDesc{};
 	WGPUCommandBuffer cmd = wgpuCommandEncoderFinish(encoder, &cmdDesc);
@@ -81,6 +81,7 @@ void wgpu::Renderer2D::Render() const
 
 		// use render pass
 		// -> Render objects here!
+		m_RenderQueue->Render(*m_Context.get(), m_VertexBuffer.buffer, renderPass);
 
 		// end renderpass
 		wgpuRenderPassEncoderEnd(renderPass);

@@ -25,7 +25,9 @@ namespace wgpu
 		void SetClearColor(float r, float g, float b, float a = 1.f);
 
 		WGPUBuffer GetVertexBuffer() const { return m_VertexBuffer.buffer; }
+
 		const GraphicsContext* GetContext() const { return m_Context.get(); }
+		RenderQueue& Queue() { return *m_RenderQueue.get(); }
 
 	private:
 		std::pair<WGPUSurfaceTexture, WGPUTextureView> GetNextSurfaceViewData() const;

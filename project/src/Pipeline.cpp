@@ -17,6 +17,33 @@ wgpu::Pipeline::Pipeline(const Shader& shader, const BindGroupLayout* bindGroupL
 	desc.vertex.bufferCount = 0;
 	desc.vertex.buffers = nullptr;
 
+	WGPUVertexBufferLayout vertexBufferLayout{};
+	std::vector<WGPUVertexAttribute> vertexAttribs(3);
+	{
+		// position
+		vertexAttribs[0].shaderLocation = 0;
+		vertexAttribs[0].format = WGPUVertexFormat_Float32x3;
+		vertexAttribs[0].offset = 0;
+
+		// color
+		vertexAttribs[1].shaderLocation = 1;
+		vertexAttribs[1].format = WGPUVertexFormat_Float32x4;
+		vertexAttribs[1].offset = sizeof(glm::vec3);
+
+		// uv
+		vertexAttribs[2].shaderLocation = 2;
+		vertexAttribs[2].format = WGPUVertexFormat_Float32x2;
+		vertexAttribs[2].offset = sizeof(glm::vec3) + sizeof(glm::vec4);
+
+		vertexBufferLayout.attributeCount = static_cast<uint32_t>(vertexAttribs.size());
+		vertexBufferLayout.attributes = vertexAttribs.data();
+
+		vertexBufferLayout.arrayStride = sizeof(Vertex);
+		vertexBufferLayout.stepMode = WGPUVertexStepMode_Vertex;
+	}
+	desc.vertex.bufferCount = 1;
+	desc.vertex.buffers = &vertexBufferLayout;
+
 	desc.vertex.module = m_Shader->GetShaderModule();
 	desc.vertex.entryPoint = WGPUStringView("vs_main", 7);
 	desc.vertex.constantCount = 0;

@@ -2,26 +2,7 @@
 #include <glm/glm.hpp>
 
 #include "Renderer2D.h"
-#include "Pipeline.h"
-
-std::unique_ptr<wgpu::Shader> g_Shader{ nullptr };
-std::unique_ptr<wgpu::Pipeline> g_Pipeline{ nullptr };
-
-//static void TestRenderCallback(WGPURenderPassEncoder renderPass)
-//{
-//	// Select which render pipeline to use
-//	wgpuRenderPassEncoderSetPipeline(renderPass, g_Pipeline->GetPipeline());
-//	// Draw 1 instance of a 3-vertices shape
-//	wgpuRenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
-//}
-
-static void InitRenderResources(const wgpu::Renderer2D& renderer)
-{
-	std::filesystem::path path{ "resources/TestShader.wgsl" };
-
-	g_Shader = std::make_unique<wgpu::Shader>(*renderer.GetContext(), path);
-	g_Pipeline = std::make_unique<wgpu::Pipeline>(*g_Shader.get());
-}
+#include "Material.h"
 
 int main()
 {
@@ -33,9 +14,42 @@ int main()
 	wgpu::Renderer2D renderer{};
 	if (!renderer.Init(window)) return -1;
 
-	InitRenderResources(renderer);
+	renderer.SetClearColor(0.f, 0.f, 0.f);
 
-	renderer.SetClearColor(0.f, 0.f, 0.1f);
+	wgpu::Shader solidColorShader{ *renderer.GetContext(), "resources/SolidColor.wgsl" };
+	wgpu::Shader solidColorInverseShader{ *renderer.GetContext(), "resources/SolidColorInverse.wgsl" };
+
+	wgpu::Pipeline solidColorPipeline{ solidColorShader };
+	wgpu::Pipeline solidColorInversePipeline{ solidColorInverseShader };
+
+	wgpu::Material solidColorMaterial{ solidColorPipeline };
+	wgpu::Material solidColorInverseMaterial{ solidColorInversePipeline };
+
+	// triangle a
+	Vertex v00{};
+	v00.position = glm::vec3{ -0.5f, -0.5f, 0.f };
+	v00.color.r = 1.f;
+
+	Vertex v01{};
+	v01.position = glm::vec3{ 0.5f, -0.5f, 0.f };
+	v01.color.g = 1.f;
+
+	Vertex v02{};
+	v02.position = glm::vec3{ 0.f, 0.5f, 0.f };
+	v02.color.b = 1.f;
+
+	// triangle b
+	Vertex v10{  };
+	v10.position = glm::vec3{ -0.55f, -0.5f, 0.f };
+	v10.color.r = 1.f;
+
+	Vertex v11{  };
+	v11.position = glm::vec3{ -0.05f, 0.5f, 0.f };
+	v11.color.g = 1.f;
+
+	Vertex v12{  };
+	v12.position = glm::vec3{ -0.55f, 0.5f, 0.f };
+	v12.color.b = 1.f;
 
 	bool isRunning{ true };
 	while (isRunning)
@@ -46,6 +60,12 @@ int main()
 			isRunning = event.type != SDL_EVENT_QUIT;
 		}
 
+		renderer.BeginFrame();
+		{
+			renderer.Queue().PushTriangle(solidColorMaterial, v00, v01, v02);
+			renderer.Queue().PushTriangle(solidColorInverseMaterial, v10, v11, v12);
+		}
+		renderer.EndFrame();
 		renderer.Render();
 	}
 	renderer.Quit();

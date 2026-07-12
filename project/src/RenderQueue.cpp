@@ -1,6 +1,7 @@
 #include "RenderQueue.h"
 
 #include <stdexcept>
+#include "Material.h"
 
 void wgpu::RenderQueue::PushTriangle(const Material& mat, const Vertex& v0, const Vertex& v1, const Vertex& v2)
 {
@@ -33,6 +34,8 @@ void wgpu::RenderQueue::Flush()
 
 void wgpu::RenderQueue::Render(const GraphicsContext& context, WGPUBuffer vertexBuffer, WGPURenderPassEncoder renderPass) const
 {
+	if (m_Batches.empty()) return;
+
 	// write to the vertex buffer
 	std::vector<Vertex> allVertices{};
 
@@ -48,6 +51,8 @@ void wgpu::RenderQueue::Render(const GraphicsContext& context, WGPUBuffer vertex
 
 	for (const auto& [mat, batch] : m_Batches)
 	{
+		wgpuRenderPassEncoderSetPipeline(renderPass, mat->GetPipeline());
+
 		wgpuRenderPassEncoderSetVertexBuffer(renderPass, 0, vertexBuffer, offset, batch.size() * sizeof(Vertex));
 		wgpuRenderPassEncoderDraw(renderPass, static_cast<uint32_t>(batch.size()), 1, 0, 0);
 		
