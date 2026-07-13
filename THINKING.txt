@@ -16,15 +16,14 @@ batch renderer:
 
 		* command => contains your vertex information
 
-	- the draw calls don't drawn instantly, they fill up the batch
-	- batch get rendered and flushed afterwards
+	- the draw calls don't draw instantly, they fill the batch
+	- batch gets rendered and flushed afterwards
 
 --- Material, shader, pipeline implementation ---
 
 Objects are rendered using materials.
 A material is rendered using a pipeline, and must provide resources matching the pipeline's bind group layout.
 A pipeline combines a shader, vertex layout, bind group layout(s), and render state into a GPU object that can render primitives.
-
 
 so to clearify:
 
@@ -54,3 +53,23 @@ The things marked with (-) will be the same for each object.
 	  even though it might use redundant memory (which i don't think is an issue for a 2D renderer)
 	* The blend state will also be same across objects, just to keep things simple for me.
 	* The depth state is what I'll use for layering objects, won't be too different from a normal depth buffer.
+
+
+Material class, how will i send uniform data?
+
+So for my material abstraction, i want to be able to to set the resources the shader needs.
+I will give textures and samplers their own abstraction, and give them their own sepparete functions
+for binding them to the material.
+
+For uniform will have one template function that can store any type, but binding it to the buffer will be
+difficult without knowing the type or size.
+	-> so to solve this i will make a struct that stores the following
+		* std::any		-> contains the value of the variable
+		* size_t		-> contains the size of the variables original type
+		* std::function -> contains a function that returns a void* and requires a std::any reference
+
+		luckely, wgpu's write buffer function only needs a void* in order to write the data to the buffer,
+		this means i can use a function that returns the pointer to wherever the std::any is storing
+		it's value
+
+The wgsl shader language used by webGPU also has more possible objects it can bind, but i'll ignore those for now.
