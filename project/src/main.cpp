@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <SDL3/SDL.h>
 #include <glm/glm.hpp>
 
@@ -16,14 +18,20 @@ int main()
 
 	renderer.SetClearColor(0.f, 0.f, 0.f);
 
-	wgpu::Shader solidColorShader{ *renderer.GetContext(), "resources/SolidColor.wgsl" };
+	wgpu::Shader solidColorShader{ *renderer.GetContext(), "resources/SolidColorMult.wgsl" };
 	wgpu::Shader solidColorInverseShader{ *renderer.GetContext(), "resources/SolidColorInverse.wgsl" };
 
-	wgpu::Pipeline solidColorPipeline{ solidColorShader };
+	wgpu::BindGroupLayout layout{};
+	layout.AddUniformEntry<float>(0, wgpu::BindingVisibility::Both);
+	layout.ConfirmLayout(*solidColorShader.GetGraphicsContext());
+
+	wgpu::Pipeline solidColorPipeline{ solidColorShader, &layout };
 	wgpu::Pipeline solidColorInversePipeline{ solidColorInverseShader };
 
 	wgpu::Material solidColorMaterial{ solidColorPipeline };
 	wgpu::Material solidColorInverseMaterial{ solidColorInversePipeline };
+
+	solidColorMaterial.SetUniform(0, 1.f);
 
 	// triangle a
 	Vertex v00{};
@@ -64,6 +72,11 @@ int main()
 		{
 			renderer.Queue().PushTriangle(solidColorMaterial, v00, v01, v02);
 			renderer.Queue().PushTriangle(solidColorInverseMaterial, v10, v11, v12);
+
+			float value{ 5 * (sinf(SDL_GetTicks() / 1000.f) + 1.05f) };
+			std::cout << value << "\n";
+
+			solidColorMaterial.SetUniform(0, value );
 		}
 		renderer.EndFrame();
 		renderer.Render();

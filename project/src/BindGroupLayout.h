@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include "GraphicsContext.h"
+#include <cstdint>
 
 namespace wgpu
 {
@@ -22,10 +23,12 @@ namespace wgpu
 		bool AddUniformEntry(int binding, BindingVisibility visibility);
 
 		template<typename T>
-		bool HasUniformEntry(int binding);
+		bool HasUniformEntry(int binding) const;
 
 		void ConfirmLayout(const GraphicsContext& context);
 		bool IsLocked() const { return m_BindGroupLayout != nullptr; }
+
+		uint64_t GetRequiredUniformBufferSize() const;
 
 		WGPUBindGroupLayout GetLayout() const { return m_BindGroupLayout; }
 		const GraphicsContext* GetGraphicsContext() const { return m_Context; }
@@ -44,7 +47,7 @@ namespace wgpu
 	inline bool BindGroupLayout::AddUniformEntry(int binding, BindingVisibility visibility)
 	{
 		if (IsLocked()) return false;
-		if (!m_Entries.contains(binding)) return false;
+		if (m_Entries.contains(binding)) return false;
 
 		auto [itr, inserted] = m_Entries.emplace(binding, WGPUBindGroupLayoutEntry{});
 
@@ -60,8 +63,9 @@ namespace wgpu
 		return true;
 	}
 
+	// not the best check but it is what it is
 	template<typename T>
-	inline bool BindGroupLayout::HasUniformEntry(int binding)
+	inline bool BindGroupLayout::HasUniformEntry(int binding) const
 	{
 		if (!m_Entries.contains(binding)) return false;
 

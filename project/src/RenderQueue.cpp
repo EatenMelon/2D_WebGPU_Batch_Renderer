@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include "Material.h"
 
-void wgpu::RenderQueue::PushTriangle(const Material& mat, const Vertex& v0, const Vertex& v1, const Vertex& v2)
+void wgpu::RenderQueue::PushTriangle(Material& mat, const Vertex& v0, const Vertex& v1, const Vertex& v2)
 {
 	if (m_Batches.contains(&mat))
 	{
@@ -49,9 +49,14 @@ void wgpu::RenderQueue::Render(const GraphicsContext& context, WGPUBuffer vertex
 	// render vertices...
 	uint64_t offset{ 0 };
 
-	for (const auto& [mat, batch] : m_Batches)
+	for (auto& [mat, batch] : m_Batches)
 	{
-		wgpuRenderPassEncoderSetPipeline(renderPass, mat->GetPipeline());
+		wgpuRenderPassEncoderSetPipeline(renderPass, mat->GetPipeline()->GetPipeline());
+
+		if (mat->GetPipeline()->GetBindGroupLayout() != nullptr && mat->GetBindGroup() != nullptr)
+		{
+			wgpuRenderPassEncoderSetBindGroup(renderPass, 0, mat->GetBindGroup(), 0, nullptr);
+		}
 
 		wgpuRenderPassEncoderSetVertexBuffer(renderPass, 0, vertexBuffer, offset, batch.size() * sizeof(Vertex));
 		wgpuRenderPassEncoderDraw(renderPass, static_cast<uint32_t>(batch.size()), 1, 0, 0);

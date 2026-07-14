@@ -21,7 +21,7 @@ namespace wgpu
 		RenderQueue(RenderQueue&&) = delete;
 		RenderQueue& operator=(RenderQueue&&) = delete;
 
-		void PushTriangle(const Material& mat, const Vertex& v0, const Vertex& v1, const Vertex& v2);
+		void PushTriangle(Material& mat, const Vertex& v0, const Vertex& v1, const Vertex& v2);
 		void Flush();
 
 		void Render(const GraphicsContext& context, WGPUBuffer vertexBuffer, WGPURenderPassEncoder renderPass) const;
@@ -29,7 +29,7 @@ namespace wgpu
 		size_t GetBufferSize() const;
 
 	private:
-		std::unordered_map<const Material*, std::vector<Vertex>> m_Batches{};
+		std::unordered_map<Material*, std::vector<Vertex>> m_Batches{};
 
 	};
 }

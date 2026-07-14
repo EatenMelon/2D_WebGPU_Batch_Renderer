@@ -7,13 +7,13 @@ wgpu::Pipeline::Pipeline(const Shader& shader, const BindGroupLayout* bindGroupL
 {
 	if (m_BindGroupLayout != nullptr)
 	{
-		if (m_Shader->GetGraphicsContext() != m_BindGroupLayout->GetGraphicsContext())
-		{
-			throw std::runtime_error("The graphics context of the shader and the bindgroup layout don't match!");
-		}
-		else if (!m_BindGroupLayout->IsLocked())
+		if (!m_BindGroupLayout->IsLocked())
 		{
 			throw std::runtime_error("Pipelines can't use unlocked bind group layouts!");
+		}
+		else if (m_Shader->GetGraphicsContext() != m_BindGroupLayout->GetGraphicsContext())
+		{
+			throw std::runtime_error("The graphics context of the shader and the bindgroup layout don't match!");
 		}
 	}
 

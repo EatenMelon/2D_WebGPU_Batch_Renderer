@@ -72,4 +72,6 @@ difficult without knowing the type or size.
 		this means i can use a function that returns the pointer to wherever the std::any is storing
 		it's value
 
+		sidenote, if issues occur with offsets, i'll most likely need to make an alignment function
+
 The wgsl shader language used by webGPU also has more possible objects it can bind, but i'll ignore those for now.
