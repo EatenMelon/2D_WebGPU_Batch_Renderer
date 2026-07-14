@@ -74,8 +74,6 @@ int main()
 			renderer.Queue().PushTriangle(solidColorInverseMaterial, v10, v11, v12);
 
 			float value{ 5 * (sinf(SDL_GetTicks() / 1000.f) + 1.05f) };
-			std::cout << value << "\n";
-
 			solidColorMaterial.SetUniform(0, value );
 		}
 		renderer.EndFrame();
