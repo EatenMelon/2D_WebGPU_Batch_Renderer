@@ -5,9 +5,16 @@ wgpu::Pipeline::Pipeline(const Shader& shader, const BindGroupLayout* bindGroupL
 	: m_Shader{ &shader }
 	, m_BindGroupLayout{ bindGroupLayout }
 {
-	if (m_BindGroupLayout != nullptr && (m_Shader->GetGraphicsContext() != m_BindGroupLayout->GetGraphicsContext()))
+	if (m_BindGroupLayout != nullptr)
 	{
-		throw std::runtime_error("The graphics context of the shader and the bindgroup layout don't match!");
+		if (m_Shader->GetGraphicsContext() != m_BindGroupLayout->GetGraphicsContext())
+		{
+			throw std::runtime_error("The graphics context of the shader and the bindgroup layout don't match!");
+		}
+		else if (!m_BindGroupLayout->IsLocked())
+		{
+			throw std::runtime_error("Pipelines can't use unlocked bind group layouts!");
+		}
 	}
 
 	WGPURenderPipelineDescriptor desc{};
@@ -93,6 +100,18 @@ wgpu::Pipeline::Pipeline(const Shader& shader, const BindGroupLayout* bindGroupL
 	desc.multisample.alphaToCoverageEnabled = false;
 
 	auto device = m_Shader->GetGraphicsContext()->GetDevice();
+
+	if (m_BindGroupLayout != nullptr)
+	{
+		WGPUPipelineLayoutDescriptor layoutDesc{};
+		layoutDesc.nextInChain = nullptr;
+		layoutDesc.bindGroupLayoutCount = 1;
+		const auto layout = m_BindGroupLayout->GetLayout();
+		layoutDesc.bindGroupLayouts = &layout;
+
+		desc.layout = wgpuDeviceCreatePipelineLayout(device, &layoutDesc);
+	}
+
 	m_Pipeline = wgpuDeviceCreateRenderPipeline(device, &desc);
 }
 

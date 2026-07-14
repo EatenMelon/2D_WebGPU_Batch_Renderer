@@ -24,10 +24,8 @@ namespace wgpu
 		template<typename T>
 		bool HasUniformEntry(int binding);
 
-		void ClearEntries();
-		void RemoveEntry(int binding);
-
 		void ConfirmLayout(const GraphicsContext& context);
+		bool IsLocked() const { return m_BindGroupLayout != nullptr; }
 
 		WGPUBindGroupLayout GetLayout() const { return m_BindGroupLayout; }
 		const GraphicsContext* GetGraphicsContext() const { return m_Context; }
@@ -45,6 +43,7 @@ namespace wgpu
 	template<typename T>
 	inline bool BindGroupLayout::AddUniformEntry(int binding, BindingVisibility visibility)
 	{
+		if (IsLocked()) return false;
 		if (!m_Entries.contains(binding)) return false;
 
 		auto [itr, inserted] = m_Entries.emplace(binding, WGPUBindGroupLayoutEntry{});

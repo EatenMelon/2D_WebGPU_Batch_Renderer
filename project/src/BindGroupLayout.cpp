@@ -2,18 +2,6 @@
 
 #include <vector>
 
-void wgpu::BindGroupLayout::ClearEntries()
-{
-	m_Entries.clear();
-}
-
-void wgpu::BindGroupLayout::RemoveEntry(int binding)
-{
-	if (!m_Entries.contains(binding)) return;
-
-	m_Entries.erase(binding);
-}
-
 void wgpu::BindGroupLayout::ConfirmLayout(const GraphicsContext& context)
 {
 	wgpuBindGroupLayoutRelease(m_BindGroupLayout);
