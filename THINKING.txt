@@ -72,6 +72,7 @@ difficult without knowing the type or size.
 		this means i can use a function that returns the pointer to wherever the std::any is storing
 		it's value
 
-		sidenote, if issues occur with offsets, i'll most likely need to make an alignment function
+		all uniforms will haev to be put into one uniform struct, this avoids alignment issues when using multiple bindings,
+		i noticed this a little late though, so i'll have to change my BindGroupLayout and Material abstractions
 
 The wgsl shader language used by webGPU also has more possible objects it can bind, but i'll ignore those for now.

@@ -84,7 +84,7 @@ void wgpu::Material::UpdateBindgroup()
 
 	auto device = m_Pipeline->GetGraphicsContext()->GetDevice();
 	m_BindGroup = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
-
+	
 	m_UpdateBindGroup = false;
 }
 

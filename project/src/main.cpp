@@ -18,20 +18,20 @@ int main()
 
 	renderer.SetClearColor(0.f, 0.f, 0.f);
 
-	wgpu::Shader solidColorShader{ *renderer.GetContext(), "resources/SolidColorMult.wgsl" };
-	wgpu::Shader solidColorInverseShader{ *renderer.GetContext(), "resources/SolidColorInverse.wgsl" };
+	wgpu::Shader shader{ *renderer.GetContext(), "resources/SolidColorMult3X.wgsl" };
 
 	wgpu::BindGroupLayout layout{};
 	layout.AddUniformEntry<float>(0, wgpu::BindingVisibility::Both);
-	layout.ConfirmLayout(*solidColorShader.GetGraphicsContext());
+	layout.AddUniformEntry<float>(1, wgpu::BindingVisibility::Both);
+	layout.AddUniformEntry<float>(2, wgpu::BindingVisibility::Both);
+	layout.ConfirmLayout(*shader.GetGraphicsContext());
 
-	wgpu::Pipeline solidColorPipeline{ solidColorShader, &layout };
-	wgpu::Pipeline solidColorInversePipeline{ solidColorInverseShader };
+	wgpu::Pipeline pipeline{ shader, &layout };
+	wgpu::Material material{ pipeline };
 
-	wgpu::Material solidColorMaterial{ solidColorPipeline };
-	wgpu::Material solidColorInverseMaterial{ solidColorInversePipeline };
-
-	solidColorMaterial.SetUniform(0, 1.f);
+	material.SetUniform(0, 1.f);
+	material.SetUniform(1, 0.5f);
+	material.SetUniform(2, 2.f);
 
 	// triangle a
 	Vertex v00{};
@@ -70,11 +70,7 @@ int main()
 
 		renderer.BeginFrame();
 		{
-			renderer.Queue().PushTriangle(solidColorMaterial, v00, v01, v02);
-			renderer.Queue().PushTriangle(solidColorInverseMaterial, v10, v11, v12);
-
-			float value{ 5 * (sinf(SDL_GetTicks() / 1000.f) + 1.05f) };
-			solidColorMaterial.SetUniform(0, value );
+			renderer.Queue().PushTriangle(material, v00, v01, v02);
 		}
 		renderer.EndFrame();
 		renderer.Render();
