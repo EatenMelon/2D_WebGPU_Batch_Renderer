@@ -12,9 +12,15 @@ struct VertexOutput
     @location(1) uv: vec2f,
 }
 
-@group(0) @binding(0) var<uniform> uMultR : f32;
-@group(0) @binding(1) var<uniform> uMultG : f32;
-@group(0) @binding(2) var<uniform> uMultB : f32;
+struct ColorF
+{
+    @location(0) r : f32,
+    @location(1) g : f32,
+    @location(2) b : f32,
+    @location(3) a : f32,
+}
+
+@group(0) @binding(0) var<uniform> uColorMultiplier : ColorF;
 
 @vertex
 fn vs_main(in: VertexInput) -> VertexOutput
@@ -28,5 +34,11 @@ fn vs_main(in: VertexInput) -> VertexOutput
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f
 {
-    return in.color * vec4f(uMultR, uMultG, uMultB, 1.f);
+    var color : vec4f;
+    color.r = uColorMultiplier.r;
+    color.g = uColorMultiplier.g;
+    color.b = uColorMultiplier.b;
+    color.a = uColorMultiplier.a;
+
+    return in.color * color;
 }

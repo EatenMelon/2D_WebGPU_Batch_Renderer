@@ -2,12 +2,33 @@
 
 #include <vector>
 #include <algorithm>
+#include <stdexcept>
+
+bool wgpu::BindGroupLayout::RequiresUniform() const
+{
+	return m_UniformEntry.has_value();
+}
+
+int wgpu::BindGroupLayout::GetUniformEntryBinding() const
+{
+	if (!m_UniformEntry.has_value())
+	{
+		throw std::runtime_error("You can't request a binding for a uniform that doesn't exist!");
+	}
+
+	return m_UniformEntry.value().second.binding;
+}
 
 void wgpu::BindGroupLayout::ConfirmLayout(const GraphicsContext& context)
 {
 	m_Context = &context;
 
 	std::vector<WGPUBindGroupLayoutEntry> entries{};
+
+	if (m_UniformEntry.has_value())
+	{
+		entries.push_back(m_UniformEntry.value().second);
+	}
 
 	for (const auto& [binding, entry] : m_Entries)
 	{
@@ -34,19 +55,12 @@ void wgpu::BindGroupLayout::ConfirmLayout(const GraphicsContext& context)
 
 uint64_t wgpu::BindGroupLayout::GetRequiredUniformBufferSize() const
 {
-	uint64_t size{ 0 };
-
-	for (const auto& [binding, entry] : m_Entries)
+	if (!m_UniformEntry.has_value())
 	{
-		if (entry.buffer.type != WGPUBufferBindingType_Uniform)
-		{
-			continue;
-		}
-
-		size += entry.buffer.minBindingSize;
+		return 0;
 	}
 
-	return size;
+	return m_UniformEntry.value().second.buffer.minBindingSize;
 }
 
 WGPUShaderStage wgpu::BindGroupLayout::GetShaderStage(BindingVisibility visibility)

@@ -25,7 +25,7 @@ namespace wgpu
 
 		struct Uniform
 		{
-			std::any value{};
+			std::any any{};
 			size_t size{};
 			int binding{};
 			std::function<void* (std::any&)> GetData{};
@@ -33,14 +33,13 @@ namespace wgpu
 
 		template<typename T>
 		Uniform CreateUniform(int binding, const T& value) const;
-		void GetSortedUniforms(std::vector<Uniform>& out) const;
 
 		WGPUBindGroup m_BindGroup{ nullptr };
 		WGPUBuffer m_UniformBuffer{ nullptr };
 		bool m_UpdateBindGroup{ true };
 		bool m_UpdateUniformBuffer{ true };
 
-		std::unordered_map<int, Uniform> m_Uniforms{};
+		Uniform m_Uniform{};
 
 		const Pipeline* m_Pipeline{ nullptr };
 	};
@@ -50,20 +49,9 @@ namespace wgpu
 	{
 		auto layout = m_Pipeline->GetBindGroupLayout();
 
-		if (!layout->HasUniformEntry<T>(binding))
-		{
-			return false;
-		}
-
-		//try
-		//{
-		//	std::any_cast<T>(/*uniform*/);
-		//}
-		//catch (const std::bad_any_cast& ex)
-		//{
-		//	return false;
-		//}
-		m_Uniforms.insert_or_assign(binding, CreateUniform(binding, value));
+		if (!layout->HasUniformEntry<T>()) return false;
+		
+		m_Uniform = CreateUniform(binding, value);
 		m_UpdateUniformBuffer = true;
 
 		return true;
@@ -74,7 +62,7 @@ namespace wgpu
 	{
 		Uniform uniform{};
 
-		uniform.value = value;
+		uniform.any = value;
 		uniform.size = sizeof(T);
 		uniform.binding = binding;
 

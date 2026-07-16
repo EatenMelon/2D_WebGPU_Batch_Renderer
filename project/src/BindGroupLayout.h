@@ -1,9 +1,12 @@
 #ifndef BINDGROUP_LAYOUT
 #define BINDGROUP_LAYOUT
 
-#include <unordered_map>
-#include "GraphicsContext.h"
 #include <cstdint>
+#include <unordered_map>
+#include <optional>
+#include <typeindex>
+
+#include "GraphicsContext.h"
 
 namespace wgpu
 {
@@ -23,7 +26,9 @@ namespace wgpu
 		bool AddUniformEntry(int binding, BindingVisibility visibility);
 
 		template<typename T>
-		bool HasUniformEntry(int binding) const;
+		bool HasUniformEntry() const;
+		bool RequiresUniform() const;
+		int GetUniformEntryBinding() const;
 
 		void ConfirmLayout(const GraphicsContext& context);
 		bool IsLocked() const { return m_BindGroupLayout != nullptr; }
@@ -38,6 +43,7 @@ namespace wgpu
 
 		WGPUBindGroupLayout m_BindGroupLayout{ nullptr };
 
+		std::optional<std::pair<std::type_index, WGPUBindGroupLayoutEntry>> m_UniformEntry{};
 		std::unordered_map<int, WGPUBindGroupLayoutEntry> m_Entries{};
 		const GraphicsContext* m_Context{ nullptr };
 	};
@@ -47,31 +53,26 @@ namespace wgpu
 	inline bool BindGroupLayout::AddUniformEntry(int binding, BindingVisibility visibility)
 	{
 		if (IsLocked()) return false;
-		if (m_Entries.contains(binding)) return false;
+		
+		WGPUBindGroupLayoutEntry entry{};
 
-		auto [itr, inserted] = m_Entries.emplace(binding, WGPUBindGroupLayoutEntry{});
+		entry.binding = binding;
+		entry.visibility = GetShaderStage(visibility);
+		entry.buffer.type = WGPUBufferBindingType_Uniform;
+		entry.buffer.minBindingSize = sizeof(T);
 
-		if (!inserted) return false;
-
-		auto& newEntry = itr->second;
-
-		newEntry.binding = binding;
-		newEntry.visibility = GetShaderStage(visibility);
-		newEntry.buffer.type = WGPUBufferBindingType_Uniform;
-		newEntry.buffer.minBindingSize = sizeof(T);
+		m_UniformEntry.emplace(typeid(T), entry);
 
 		return true;
 	}
 
 	// not the best check but it is what it is
 	template<typename T>
-	inline bool BindGroupLayout::HasUniformEntry(int binding) const
+	inline bool BindGroupLayout::HasUniformEntry() const
 	{
-		if (!m_Entries.contains(binding)) return false;
+		if (!m_UniformEntry.has_value()) return false;
 
-		auto itr = m_Entries.find(binding);
-
-		return itr->second.buffer.minBindingSize == sizeof(T);
+		return m_UniformEntry.value().first == typeid(T);
 	}
 }
 

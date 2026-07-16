@@ -16,22 +16,17 @@ int main()
 	wgpu::Renderer2D renderer{};
 	if (!renderer.Init(window)) return -1;
 
-	renderer.SetClearColor(0.f, 0.f, 0.f);
+	renderer.SetClearColor(0.05f, 0.05f, 0.05f);
 
-	wgpu::Shader shader{ *renderer.GetContext(), "resources/SolidColorMult3X.wgsl" };
+	wgpu::Shader shader{ *renderer.GetContext(), "resources/SolidColorMultRGBA.wgsl" };
 
 	wgpu::BindGroupLayout layout{};
-	layout.AddUniformEntry<float>(0, wgpu::BindingVisibility::Both);
-	layout.AddUniformEntry<float>(1, wgpu::BindingVisibility::Both);
-	layout.AddUniformEntry<float>(2, wgpu::BindingVisibility::Both);
+	layout.AddUniformEntry<ColorF>(0, wgpu::BindingVisibility::Both);
 	layout.ConfirmLayout(*shader.GetGraphicsContext());
 
 	wgpu::Pipeline pipeline{ shader, &layout };
 	wgpu::Material material{ pipeline };
 
-	material.SetUniform(0, 1.f);
-	material.SetUniform(1, 0.5f);
-	material.SetUniform(2, 2.f);
 
 	// triangle a
 	Vertex v00{};
@@ -59,6 +54,7 @@ int main()
 	v12.position = glm::vec3{ -0.55f, 0.5f, 0.f };
 	v12.color.b = 1.f;
 
+	ColorF multiplier{};
 	bool isRunning{ true };
 	while (isRunning)
 	{
@@ -71,6 +67,13 @@ int main()
 		renderer.BeginFrame();
 		{
 			renderer.Queue().PushTriangle(material, v00, v01, v02);
+			material.SetUniform(0, multiplier);
+
+			float time = SDL_GetTicks() / 1000.f;
+			multiplier.r = 1 + sinf(time);
+			multiplier.g = 1 + cosf(time);
+			multiplier.b = 1 + cosf(time) * sinf(time);
+			multiplier.a = sinf(-time * 2.5f);
 		}
 		renderer.EndFrame();
 		renderer.Render();
