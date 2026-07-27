@@ -21,6 +21,7 @@ add_executable(${PROJECT_NAME}
 	"${SRC_DIR}/BindGroupLayout.cpp"
 	"${SRC_DIR}/RenderQueue.cpp"
 	"${SRC_DIR}/Material.cpp"
+	"${SRC_DIR}/Texture2D.cpp"
 )
 
 # include directories
@@ -33,11 +34,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 # link libraries
 set(SDL3_DIR "${LIB_DIR}/SDL3/cmake")
-find_package(SDL3 REQUIRED)
+set(SDL3_image_DIR "${LIB_DIR}/SDL3_image/cmake")
 
-if(NOT TARGET SDL3::SDL3-shared)
-    message(FATAL_ERROR "SDL3 shared target not found — DLL build not available")
-endif()
+find_package(SDL3 REQUIRED)
+find_package(SDL3_image REQUIRED)
 
 # subdirectories
 add_subdirectory("${LIB_DIR}/webgpu")
@@ -45,7 +45,8 @@ add_subdirectory("${LIB_DIR}/sdl3webgpu")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
 	webgpu
-	SDL3::SDL3-shared
+	SDL3::SDL3
+	SDL3_image::SDL3_image
 	sdl3webgpu
 )
 
@@ -57,7 +58,13 @@ target_copy_webgpu_binaries(${PROJECT_NAME})
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "$<TARGET_FILE:SDL3::SDL3-shared>"
+    "$<TARGET_FILE:SDL3::SDL3>"
+	"$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "$<TARGET_FILE:SDL3_image::SDL3_image>"
 	"$<TARGET_FILE_DIR:${PROJECT_NAME}>"
 )
 

@@ -46,7 +46,6 @@ void wgpu::Renderer2D::EndFrame()
 	{
 		CreateVertexBuffer(bufferSize * 2);
 	}
-
 }
 
 void wgpu::Renderer2D::Render() const

@@ -30,10 +30,10 @@ void wgpu::BindGroupLayout::ConfirmLayout(const GraphicsContext& context)
 		entries.push_back(m_UniformEntry.value().second);
 	}
 
-	for (const auto& [binding, entry] : m_Entries)
-	{
-		entries.push_back(entry);
-	}
+	//for (const auto& [binding, entry] : m_Entries)
+	//{
+	//	entries.push_back(entry);
+	//}
 
 	std::sort
 	(
