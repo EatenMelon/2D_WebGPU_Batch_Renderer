@@ -6,6 +6,7 @@
 #include "Renderer2D.h"
 #include "Material.h"
 #include "Texture2D.h"
+#include "Sampler.h"
 
 int main()
 {
@@ -24,6 +25,7 @@ int main()
 
 	wgpu::Texture2D texture0{ *renderer.GetContext(), "resources/texture.png" };
 	wgpu::Texture2D texture1{ *renderer.GetContext(), "resources/texture.jpg" };
+	wgpu::Sampler sampler{ *renderer.GetContext(), wgpu::Sampler::Preset::PixelArt };
 
 	wgpu::BindGroupLayout layout{};
 	//layout.AddUniformEntry<ColorF>(0, wgpu::BindingVisibility::Both);
@@ -32,7 +34,7 @@ int main()
 
 	wgpu::Pipeline pipeline{ shader, &layout };
 	wgpu::Material material{ pipeline };
-	material.SetTexture(1, &texture0);
+	material.SetTexture(1, &texture1);
 
 
 	Vertex v00{};	// bottom-left

@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
 	"${SRC_DIR}/RenderQueue.cpp"
 	"${SRC_DIR}/Material.cpp"
 	"${SRC_DIR}/Texture2D.cpp"
+	"${SRC_DIR}/Sampler.cpp"
 )
 
 # include directories
