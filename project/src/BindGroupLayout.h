@@ -18,12 +18,14 @@ namespace wgpu
 		None
 	};
 
+	class Texture2D;
 	class BindGroupLayout
 	{
 	public:
 
 		template<typename T>
 		bool AddUniformEntry(int binding, BindingVisibility visibility);
+		bool AddTextureEntry(int binding);
 
 		template<typename T>
 		bool HasUniformEntry() const;

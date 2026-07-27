@@ -19,45 +19,45 @@ int main()
 
 	renderer.SetClearColor(0.05f, 0.05f, 0.05f);
 
-	wgpu::Shader shader{ *renderer.GetContext(), "resources/SolidColorMultRGBA.wgsl" };
-
-	wgpu::BindGroupLayout layout{};
-	layout.AddUniformEntry<ColorF>(0, wgpu::BindingVisibility::Both);
-	layout.ConfirmLayout(*shader.GetGraphicsContext());
-
-	wgpu::Pipeline pipeline{ shader, &layout };
-	wgpu::Material material{ pipeline };
+	//wgpu::Shader shader{ *renderer.GetContext(), "resources/SolidColorMultRGBA.wgsl" };
+	wgpu::Shader shader{ *renderer.GetContext(), "resources/BasicTexture.wgsl" };
 
 	wgpu::Texture2D texture0{ *renderer.GetContext(), "resources/texture.png" };
 	wgpu::Texture2D texture1{ *renderer.GetContext(), "resources/texture.jpg" };
 
-	// triangle a
-	Vertex v00{};
+	wgpu::BindGroupLayout layout{};
+	//layout.AddUniformEntry<ColorF>(0, wgpu::BindingVisibility::Both);
+	layout.AddTextureEntry(1);
+	layout.ConfirmLayout(*shader.GetGraphicsContext());
+
+	wgpu::Pipeline pipeline{ shader, &layout };
+	wgpu::Material material{ pipeline };
+	material.SetTexture(1, &texture0);
+
+
+	Vertex v00{};	// bottom-left
 	v00.position = glm::vec3{ -0.5f, -0.5f, 0.f };
 	v00.color.r = 1.f;
+	v00.uv = glm::vec2{ 0.f, 1.f };
 
-	Vertex v01{};
+	Vertex v01{};	// bottom-right
 	v01.position = glm::vec3{ 0.5f, -0.5f, 0.f };
 	v01.color.g = 1.f;
+	v01.uv = glm::vec2{ 1.f, 1.f };
 
-	Vertex v02{};
-	v02.position = glm::vec3{ 0.f, 0.5f, 0.f };
+	Vertex v02{};	// top-right
+	v02.position = glm::vec3{ 0.5f, 0.5f, 0.f };
 	v02.color.b = 1.f;
+	v02.uv = glm::vec2{ 1.f, 0.f };
 
-	// triangle b
-	Vertex v10{  };
-	v10.position = glm::vec3{ -0.55f, -0.5f, 0.f };
-	v10.color.g = 1.f;
+	Vertex v03{};	// top-left
+	v03.position = glm::vec3{ -0.5f, 0.5f, 0.f };
+	v03.color.g = 1.f;
+	v03.uv = glm::vec2{ 0.f, 0.f };
+	
+	ColorF multiplier{ 1.f, 1.f, 1.f };
+	material.SetUniform(0, multiplier);
 
-	Vertex v11{  };
-	v11.position = glm::vec3{ -0.05f, 0.5f, 0.f };
-	v11.color.b = 1.f;
-
-	Vertex v12{  };
-	v12.position = glm::vec3{ -0.55f, 0.5f, 0.f };
-	v12.color.r = 1.f;
-
-	ColorF multiplier{};
 	bool isRunning{ true };
 	while (isRunning)
 	{
@@ -70,16 +70,9 @@ int main()
 		renderer.BeginFrame();
 		{
 			renderer.Queue().PushTriangle(material, v00, v01, v02);
-			renderer.Queue().PushTriangle(material, v10, v11, v12);
-			material.SetUniform(0, multiplier);
-
-			float time = SDL_GetTicks() / 1000.f;
-			multiplier.r = (1 + sinf(time)) * 2;
-			multiplier.g = (1 + cosf(time)) * 2;
-			multiplier.b = (1 + cosf(time) * sinf(time)) * 2;
+			renderer.Queue().PushTriangle(material, v00, v02, v03);
 		}
 		renderer.EndFrame();
-
 		renderer.Render();
 	}
 	renderer.Quit();

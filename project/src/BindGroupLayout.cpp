@@ -4,6 +4,21 @@
 #include <algorithm>
 #include <stdexcept>
 
+bool wgpu::BindGroupLayout::AddTextureEntry(int binding)
+{
+	if (IsLocked()) return false;
+
+	WGPUBindGroupLayoutEntry entry{};
+	entry.binding = binding;
+	entry.visibility = WGPUShaderStage_Fragment;
+	entry.texture.sampleType = WGPUTextureSampleType_Float;
+	entry.texture.viewDimension = WGPUTextureViewDimension_2D;
+
+	m_Entries.insert_or_assign(binding, entry);
+
+	return true;
+}
+
 bool wgpu::BindGroupLayout::RequiresUniform() const
 {
 	return m_UniformEntry.has_value();
@@ -30,10 +45,10 @@ void wgpu::BindGroupLayout::ConfirmLayout(const GraphicsContext& context)
 		entries.push_back(m_UniformEntry.value().second);
 	}
 
-	//for (const auto& [binding, entry] : m_Entries)
-	//{
-	//	entries.push_back(entry);
-	//}
+	for (const auto& [binding, entry] : m_Entries)
+	{
+		entries.push_back(entry);
+	}
 
 	std::sort
 	(

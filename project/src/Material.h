@@ -15,6 +15,7 @@ namespace wgpu
 
 		template<typename T>
 		bool SetUniform(int binding, T value);
+		bool SetTexture(int binding, const Texture2D* texture);
 
 		WGPUBindGroup GetBindGroup();
 		const Pipeline* GetPipeline() const { return m_Pipeline; }
@@ -40,6 +41,7 @@ namespace wgpu
 		bool m_UpdateUniformBuffer{ true };
 
 		Uniform m_Uniform{};
+		std::unordered_map<int, const Texture2D*> m_Textures{};
 
 		const Pipeline* m_Pipeline{ nullptr };
 	};

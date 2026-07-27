@@ -1,4 +1,5 @@
 #include "Material.h"
+#include "Texture2D.h"
 
 wgpu::Material::Material(const Pipeline& pipeline)
 	: m_Pipeline{ &pipeline }
@@ -16,6 +17,15 @@ wgpu::Material::Material(const Pipeline& pipeline)
     bufferDesc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Uniform;
 
     m_UniformBuffer = wgpuDeviceCreateBuffer(m_Pipeline->GetGraphicsContext()->GetDevice(), &bufferDesc);
+}
+
+bool wgpu::Material::SetTexture(int binding, const Texture2D* texture)
+{
+	if (texture == nullptr) return false;
+
+	m_Textures.insert_or_assign(binding, texture);
+
+	return false;
 }
 
 WGPUBindGroup wgpu::Material::GetBindGroup()
@@ -66,6 +76,16 @@ void wgpu::Material::UpdateBindgroup()
 	else if (bindGroupLayout->RequiresUniform())
 	{
 		throw std::runtime_error("The uniform required has not been set!");
+	}
+
+	for (const auto& [binding, texture] : m_Textures)
+	{
+		WGPUBindGroupEntry entry{};
+
+		entry.binding = binding;
+		entry.textureView = texture->GetView();
+
+		bindings.push_back(entry);
 	}
 
 	WGPUBindGroupDescriptor bindGroupDesc{};
