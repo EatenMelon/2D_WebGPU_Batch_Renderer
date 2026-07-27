@@ -1,5 +1,6 @@
 #include "Material.h"
 #include "Texture2D.h"
+#include "Sampler.h"
 
 wgpu::Material::Material(const Pipeline& pipeline)
 	: m_Pipeline{ &pipeline }
@@ -25,7 +26,16 @@ bool wgpu::Material::SetTexture(int binding, const Texture2D* texture)
 
 	m_Textures.insert_or_assign(binding, texture);
 
-	return false;
+	return true;
+}
+
+bool wgpu::Material::SetSampler(int binding, const Sampler* sampler)
+{
+	if (sampler == nullptr) return false;
+
+	m_Samplers.insert_or_assign(binding, sampler);
+
+	return true;
 }
 
 WGPUBindGroup wgpu::Material::GetBindGroup()
@@ -84,6 +94,16 @@ void wgpu::Material::UpdateBindgroup()
 
 		entry.binding = binding;
 		entry.textureView = texture->GetView();
+
+		bindings.push_back(entry);
+	}
+
+	for (const auto& [binding, sampler] : m_Samplers)
+	{
+		WGPUBindGroupEntry entry{};
+
+		entry.binding = binding;
+		entry.sampler = sampler->GetSampler();
 
 		bindings.push_back(entry);
 	}

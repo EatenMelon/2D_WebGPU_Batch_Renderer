@@ -22,6 +22,8 @@ namespace wgpu
 		Sampler(Sampler&&) = delete;
 		Sampler& operator=(Sampler&&) = delete;
 
+		WGPUSampler GetSampler() const { return m_Sampler; }
+
 	private:
 		struct SamplerSettings
 		{

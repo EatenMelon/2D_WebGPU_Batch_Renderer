@@ -14,7 +14,21 @@ bool wgpu::BindGroupLayout::AddTextureEntry(int binding)
 	entry.texture.sampleType = WGPUTextureSampleType_Float;
 	entry.texture.viewDimension = WGPUTextureViewDimension_2D;
 
-	m_Entries.insert_or_assign(binding, entry);
+	m_Entries.emplace(binding, entry);
+
+	return true;
+}
+
+bool wgpu::BindGroupLayout::AddSamplerEntry(int binding)
+{
+	if (IsLocked()) return false;
+
+	WGPUBindGroupLayoutEntry entry{};
+	entry.binding = binding;
+	entry.visibility = WGPUShaderStage_Fragment;
+	entry.sampler.type = WGPUSamplerBindingType_Filtering;
+
+	m_Entries.emplace(binding, entry);
 
 	return true;
 }

@@ -21,21 +21,20 @@ int main()
 	renderer.SetClearColor(0.05f, 0.05f, 0.05f);
 
 	//wgpu::Shader shader{ *renderer.GetContext(), "resources/SolidColorMultRGBA.wgsl" };
-	wgpu::Shader shader{ *renderer.GetContext(), "resources/BasicTexture.wgsl" };
+	wgpu::Shader shader{ *renderer.GetContext(), "resources/BasicTextureAndSampler.wgsl" };
 
-	wgpu::Texture2D texture0{ *renderer.GetContext(), "resources/texture.png" };
-	wgpu::Texture2D texture1{ *renderer.GetContext(), "resources/texture.jpg" };
-	wgpu::Sampler sampler{ *renderer.GetContext(), wgpu::Sampler::Preset::PixelArt };
+	wgpu::Texture2D texture{ *renderer.GetContext(), "resources/texture.jpg" };
+	wgpu::Sampler sampler{ *renderer.GetContext(), wgpu::Sampler::Preset::Smooth };
 
 	wgpu::BindGroupLayout layout{};
-	//layout.AddUniformEntry<ColorF>(0, wgpu::BindingVisibility::Both);
-	layout.AddTextureEntry(1);
+	layout.AddTextureEntry(0);
+	layout.AddSamplerEntry(1);
 	layout.ConfirmLayout(*shader.GetGraphicsContext());
 
 	wgpu::Pipeline pipeline{ shader, &layout };
 	wgpu::Material material{ pipeline };
-	material.SetTexture(1, &texture1);
-
+	material.SetTexture(0, &texture);
+	material.SetSampler(1, &sampler);
 
 	Vertex v00{};	// bottom-left
 	v00.position = glm::vec3{ -0.5f, -0.5f, 0.f };
