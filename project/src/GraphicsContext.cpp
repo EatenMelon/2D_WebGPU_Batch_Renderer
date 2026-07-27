@@ -40,8 +40,7 @@ wgpu::GraphicsContext::~GraphicsContext()
 {
 	m_Window = nullptr;
 
-	wgpuSurfaceRelease(m_Surface);
-	m_Surface = nullptr;
+	DestroySurface();
 
 	wgpuQueueRelease(m_Queue);
 	m_Queue = nullptr;
@@ -187,6 +186,10 @@ bool wgpu::GraphicsContext::InitSurface()
 	// solution => adjust your fragment shader
 	//m_SurfaceFormat = WGPUTextureFormat_RGBA8Unorm;
 	m_SurfaceFormat = capabilities.formats[0];
+
+	// Surface Capabilities need to be released as well
+	wgpuSurfaceCapabilitiesFreeMembers(capabilities);
+
 	config.format = m_SurfaceFormat;
 
 	config.viewFormatCount = 0;
@@ -201,4 +204,12 @@ bool wgpu::GraphicsContext::InitSurface()
 	wgpuSurfaceConfigure(m_Surface, &config);
 
 	return true;
+}
+
+void wgpu::GraphicsContext::DestroySurface()
+{
+	wgpuSurfaceRelease(m_Surface);
+	m_Surface = nullptr;
+
+	m_SurfaceFormat = WGPUTextureFormat_Undefined;
 }

@@ -116,6 +116,12 @@ void wgpu::Renderer2D::SetClearColor(float r, float g, float b, float a)
 	m_ClearColor = WGPUColor(r, g, b, a);
 }
 
+void wgpu::Renderer2D::Resize()
+{
+	m_Context->DestroySurface();
+	m_Context->InitSurface();
+}
+
 std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceViewData() const
 {
 	WGPUSurfaceTexture surfaceTexture{};

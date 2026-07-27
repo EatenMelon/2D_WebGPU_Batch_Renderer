@@ -18,6 +18,9 @@ namespace wgpu
 		GraphicsContext(GraphicsContext&&) = delete;
 		GraphicsContext& operator=(GraphicsContext&&) = delete; 
 
+		bool InitSurface();
+		void DestroySurface();
+
 		WGPUInstance GetInstance() const { return m_Instance; }
 		WGPUAdapter GetAdapter() const { return m_Adapter; }
 		WGPUDevice GetDevice() const { return m_Device; }
@@ -32,7 +35,6 @@ namespace wgpu
 		bool RequestAdapter();
 		bool RequestDevice();
 		bool RequestQueue();
-		bool InitSurface();
 
 		WGPUInstance m_Instance{ nullptr };
 		WGPUAdapter m_Adapter{ nullptr };

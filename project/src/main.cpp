@@ -13,7 +13,7 @@ int main()
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 
 	glm::ivec2 size{ 800, 600 };
-	SDL_Window* window = SDL_CreateWindow("Hello WebGPU", size.x, size.y, NULL);
+	SDL_Window* window = SDL_CreateWindow("Hello WebGPU", size.x, size.y, SDL_WINDOW_RESIZABLE);
 
 	wgpu::Renderer2D renderer{};
 	if (!renderer.Init(window)) return -1;
@@ -66,6 +66,16 @@ int main()
 		while (SDL_PollEvent(&event))
 		{
 			isRunning = event.type != SDL_EVENT_QUIT;
+
+			switch (event.type)
+			{
+			case SDL_EVENT_WINDOW_RESIZED:
+				renderer.Resize();
+				break;
+
+			default:
+				break;
+			}
 		}
 
 		renderer.BeginFrame();
