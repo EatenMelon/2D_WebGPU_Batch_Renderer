@@ -7,6 +7,8 @@
 #include "GraphicsContext.h"
 #include "RenderQueue.h"
 
+#include "Camera2D.h"
+
 struct SDL_Window;
 
 namespace wgpu
@@ -23,6 +25,7 @@ namespace wgpu
 		void Quit();
 
 		void SetClearColor(float r, float g, float b, float a = 1.f);
+		void SetCamera(const Camera2D& camera);
 		void Resize();
 
 		WGPUBuffer GetVertexBuffer() const { return m_VertexBuffer.buffer; }
@@ -38,7 +41,8 @@ namespace wgpu
 		std::unique_ptr<GraphicsContext> m_Context{ nullptr };
 		std::unique_ptr<RenderQueue> m_RenderQueue{ nullptr };
 
-		WGPUColor m_ClearColor{ 0.f, 0.f, 0.f, 1.f };
+		ColorF m_ClearColor{ 0.f, 0.f, 0.f, 1.f };
+		Camera2D m_Camera{};
 
 		struct VertexBuffer
 		{

@@ -25,6 +25,7 @@ namespace wgpu
 		void Flush();
 
 		void Render(const GraphicsContext& context, WGPUBuffer vertexBuffer, WGPURenderPassEncoder renderPass) const;
+		void SetCamera(const CameraData& camera);
 
 		size_t GetBufferSize() const;
 

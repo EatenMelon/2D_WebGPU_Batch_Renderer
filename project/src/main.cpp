@@ -21,14 +21,15 @@ int main()
 	renderer.SetClearColor(0.05f, 0.05f, 0.05f);
 
 	//wgpu::Shader shader{ *renderer.GetContext(), "resources/SolidColorMultRGBA.wgsl" };
-	wgpu::Shader shader{ *renderer.GetContext(), "resources/BasicTextureAndSampler.wgsl" };
+	wgpu::Shader shader{ *renderer.GetContext(), "resources/CameraTest.wgsl" };
 
 	wgpu::Texture2D texture{ *renderer.GetContext(), "resources/texture.jpg" };
-	wgpu::Sampler sampler{ *renderer.GetContext(), wgpu::Sampler::Preset::Smooth };
+	wgpu::Sampler sampler{ *renderer.GetContext(), wgpu::Sampler::Preset::PixelArt };
 
 	wgpu::BindGroupLayout layout{};
 	layout.AddTextureEntry(0);
 	layout.AddSamplerEntry(1);
+	layout.AddUniformEntry<CameraData>(2, wgpu::BindingVisibility::VertexShaderStage);
 	layout.ConfirmLayout(*shader.GetGraphicsContext());
 
 	wgpu::Pipeline pipeline{ shader, &layout };
@@ -55,9 +56,13 @@ int main()
 	v03.position = glm::vec3{ -0.5f, 0.5f, 0.f };
 	v03.color.g = 1.f;
 	v03.uv = glm::vec2{ 0.f, 0.f };
-	
-	ColorF multiplier{ 1.f, 1.f, 1.f };
-	material.SetUniform(0, multiplier);
+
+	wgpu::Camera2D camera{};
+
+	//camera.SetZoom(-10.f);
+	camera.Focus(glm::vec2(0.25f, 0.f));
+
+	renderer.SetCamera(camera);
 
 	bool isRunning{ true };
 	while (isRunning)
@@ -71,6 +76,20 @@ int main()
 			{
 			case SDL_EVENT_WINDOW_RESIZED:
 				renderer.Resize();
+				break;
+
+			case SDL_EVENT_MOUSE_WHEEL:
+				camera.Zoom(event.wheel.y / 100.f);
+				renderer.SetCamera(camera);
+				break;
+
+			case SDL_EVENT_MOUSE_MOTION:
+				if ((event.motion.state & SDL_BUTTON_LEFT) != SDL_BUTTON_LEFT) break;
+
+				glm::vec2 motion{ -event.motion.xrel, event.motion.yrel };
+
+				camera.Move(motion / 1000.f);
+				renderer.SetCamera(camera);
 				break;
 
 			default:

@@ -65,6 +65,18 @@ void wgpu::RenderQueue::Render(const GraphicsContext& context, WGPUBuffer vertex
 	}
 }
 
+void wgpu::RenderQueue::SetCamera(const CameraData& camera)
+{
+	for (auto [material, _] : m_Batches)
+	{
+		const int binding = material->GetUniformBinding<CameraData>();
+		
+		if (binding < 0) continue;
+
+		material->SetUniform(binding, camera);
+	}
+}
+
 size_t wgpu::RenderQueue::GetBufferSize() const
 {
 	size_t bufferSize{ 0 };

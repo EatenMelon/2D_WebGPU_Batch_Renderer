@@ -21,6 +21,9 @@ namespace wgpu
 		bool SetTexture(int binding, const Texture2D* texture);
 		bool SetSampler(int binding, const Sampler* sampler);
 
+		template<typename T>
+		int GetUniformBinding();
+
 		WGPUBindGroup GetBindGroup();
 		const Pipeline* GetPipeline() const { return m_Pipeline; }
 
@@ -56,12 +59,20 @@ namespace wgpu
 	{
 		auto layout = m_Pipeline->GetBindGroupLayout();
 
-		if (!layout->HasUniformEntry<T>()) return false;
+		if (layout->GetUniformEntryBinding<T>() < 0) return false;
 		
 		m_Uniform = CreateUniform(binding, value);
 		m_UpdateUniformBuffer = true;
 
 		return true;
+	}
+
+	template<typename T>
+	inline int Material::GetUniformBinding()
+	{
+		auto layout = m_Pipeline->GetBindGroupLayout();
+
+		return layout->GetUniformEntryBinding<T>();
 	}
 
 	template<typename T>

@@ -38,16 +38,6 @@ bool wgpu::BindGroupLayout::RequiresUniform() const
 	return m_UniformEntry.has_value();
 }
 
-int wgpu::BindGroupLayout::GetUniformEntryBinding() const
-{
-	if (!m_UniformEntry.has_value())
-	{
-		throw std::runtime_error("You can't request a binding for a uniform that doesn't exist!");
-	}
-
-	return m_UniformEntry.value().second.binding;
-}
-
 void wgpu::BindGroupLayout::ConfirmLayout(const GraphicsContext& context)
 {
 	m_Context = &context;
@@ -97,13 +87,13 @@ WGPUShaderStage wgpu::BindGroupLayout::GetShaderStage(BindingVisibility visibili
 	switch (visibility)
 	{
 	case wgpu::BindingVisibility::VertexShaderStage:
-		return WGPUShaderStage_Fragment;
+		return WGPUShaderStage_Vertex;
 
 	case wgpu::BindingVisibility::FragmentShaderStage:
 		return WGPUShaderStage_Fragment;
 
 	case wgpu::BindingVisibility::Both:
-		return WGPUShaderStage_Fragment | WGPUShaderStage_Fragment;
+		return WGPUShaderStage_Fragment | WGPUShaderStage_Vertex;
 
 	default: break;
 	}

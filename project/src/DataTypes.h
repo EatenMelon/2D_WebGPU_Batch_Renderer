@@ -36,4 +36,10 @@ struct Vertex
 	glm::vec2 uv{};
 };
 
+struct CameraData
+{
+	glm::mat4x4 projection{ glm::mat4(1.f) };
+	glm::mat4x4 view{ glm::mat4(1.f) };
+};
+
 #endif

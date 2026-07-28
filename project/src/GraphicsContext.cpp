@@ -55,6 +55,11 @@ wgpu::GraphicsContext::~GraphicsContext()
 	m_Instance = nullptr;
 }
 
+float wgpu::GraphicsContext::GetAspectRatio() const
+{
+	return m_WindowSize.x / m_WindowSize.y;
+}
+
 bool wgpu::GraphicsContext::CreateInstance()
 {
 	WGPUInstanceDescriptor desc{};
@@ -168,6 +173,8 @@ bool wgpu::GraphicsContext::InitSurface()
 
 	glm::ivec2 size{};
 	SDL_GetWindowSize(m_Window, &size.x, &size.y);
+
+	m_WindowSize = size;
 
 	config.width = size.x;
 	config.height = size.y;

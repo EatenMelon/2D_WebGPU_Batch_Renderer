@@ -2,6 +2,7 @@
 #define _GRAPHICS_CONTEXT
 
 #include <webgpu/webgpu.h>
+#include <glm/glm.hpp>
 
 struct SDL_Window;
 
@@ -29,6 +30,8 @@ namespace wgpu
 		WGPUTextureFormat GetSurfaceFormat() const { return m_SurfaceFormat; }
 
 		SDL_Window* GetWindow() const { return m_Window; }
+		glm::vec2 GetWindowSize() const { return m_WindowSize; }
+		float GetAspectRatio() const;
 
 	private:
 		bool CreateInstance();
@@ -44,6 +47,7 @@ namespace wgpu
 		WGPUTextureFormat m_SurfaceFormat{ WGPUTextureFormat_Undefined };
 
 		SDL_Window* m_Window{ nullptr };
+		glm::vec2 m_WindowSize{};
 	};
 }
 

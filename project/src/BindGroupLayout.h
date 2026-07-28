@@ -28,10 +28,9 @@ namespace wgpu
 		bool AddSamplerEntry(int binding);
 
 		template<typename T>
-		bool HasUniformEntry() const;
-		bool RequiresUniform() const;
 		int GetUniformEntryBinding() const;
-
+		bool RequiresUniform() const;
+		
 		void ConfirmLayout(const GraphicsContext& context);
 		bool IsLocked() const { return m_BindGroupLayout != nullptr; }
 
@@ -68,14 +67,16 @@ namespace wgpu
 		return true;
 	}
 
-	// not the best check but it is what it is
 	template<typename T>
-	inline bool BindGroupLayout::HasUniformEntry() const
+	inline int BindGroupLayout::GetUniformEntryBinding() const
 	{
-		if (!m_UniformEntry.has_value()) return false;
+		if (!m_UniformEntry.has_value()) return -1;
+		if (m_UniformEntry.value().first != typeid(T)) return -1;
 
-		return m_UniformEntry.value().first == typeid(T);
+		return m_UniformEntry.value().second.binding;
 	}
+
+	
 }
 
 #endif
