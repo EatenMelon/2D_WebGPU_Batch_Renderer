@@ -1,17 +1,41 @@
 #include "Pipeline.h"
 #include "DataTypes.h"
 
+static void SetDefault(WGPUStencilFaceState& stencilFaceState)
+{
+	stencilFaceState.compare = WGPUCompareFunction_Always;
+	stencilFaceState.failOp = WGPUStencilOperation_Keep;
+	stencilFaceState.depthFailOp = WGPUStencilOperation_Keep;
+	stencilFaceState.passOp = WGPUStencilOperation_Keep;
+}
+
+static void SetDefault(WGPUDepthStencilState& depthStencilState)
+{
+	depthStencilState.format = WGPUTextureFormat_Undefined;
+	depthStencilState.depthWriteEnabled = WGPUOptionalBool_False;
+	depthStencilState.depthCompare = WGPUCompareFunction_Always;
+	depthStencilState.stencilReadMask = 0xFFFFFFFF;
+	depthStencilState.stencilWriteMask = 0xFFFFFFFF;
+	depthStencilState.depthBias = 0;
+	depthStencilState.depthBiasSlopeScale = 0;
+	depthStencilState.depthBiasClamp = 0;
+	SetDefault(depthStencilState.stencilFront);
+	SetDefault(depthStencilState.stencilBack);
+}
+
 wgpu::Pipeline::Pipeline(const Shader& shader, const BindGroupLayout* bindGroupLayout)
 	: m_Shader{ &shader }
 	, m_BindGroupLayout{ bindGroupLayout }
 {
+	auto renderer = shader.GetRenderer();
+
 	if (m_BindGroupLayout != nullptr)
 	{
 		if (!m_BindGroupLayout->IsLocked())
 		{
 			throw std::runtime_error("Pipelines can't use unlocked bind group layouts!");
 		}
-		else if (m_Shader->GetGraphicsContext() != m_BindGroupLayout->GetGraphicsContext())
+		else if (renderer->GetContext() != m_BindGroupLayout->GetGraphicsContext())
 		{
 			throw std::runtime_error("The graphics context of the shader and the bindgroup layout don't match!");
 		}
@@ -80,7 +104,7 @@ wgpu::Pipeline::Pipeline(const Shader& shader, const BindGroupLayout* bindGroupL
 	blendState.alpha.operation = WGPUBlendOperation_Add;
 
 	WGPUColorTargetState colorTarget{};
-	colorTarget.format = m_Shader->GetGraphicsContext()->GetSurfaceFormat();
+	colorTarget.format = renderer->GetContext()->GetSurfaceFormat();
 	colorTarget.blend = &blendState;
 	colorTarget.writeMask = WGPUColorWriteMask_All;
 
@@ -92,14 +116,26 @@ wgpu::Pipeline::Pipeline(const Shader& shader, const BindGroupLayout* bindGroupL
 	desc.fragment = &fragmentState;
 
 	// describe stencil/depth pipeline stage
-	desc.depthStencil = nullptr;
+	WGPUDepthStencilState depthStencilState{};
+	SetDefault(depthStencilState);
+
+	depthStencilState.depthCompare = WGPUCompareFunction_Less;
+	depthStencilState.depthWriteEnabled = WGPUOptionalBool_True;
+
+	WGPUTextureFormat depthTextureFormat = wgpuTextureGetFormat(renderer->GetDepthTexture());
+	depthStencilState.format = depthTextureFormat;
+
+	depthStencilState.stencilReadMask = 0;
+	depthStencilState.stencilWriteMask = 0;
+
+	desc.depthStencil = &depthStencilState;
 
 	// describe multi sampling state
 	desc.multisample.count = 1;
 	desc.multisample.mask = ~0u;
 	desc.multisample.alphaToCoverageEnabled = false;
 
-	auto device = m_Shader->GetGraphicsContext()->GetDevice();
+	auto device = renderer->GetContext()->GetDevice();
 
 	if (m_BindGroupLayout != nullptr)
 	{

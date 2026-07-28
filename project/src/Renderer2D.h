@@ -29,6 +29,7 @@ namespace wgpu
 		void Resize();
 
 		WGPUBuffer GetVertexBuffer() const { return m_VertexBuffer.buffer; }
+		WGPUTexture GetDepthTexture() const { return m_DepthTexture; }
 
 		const GraphicsContext* GetContext() const { return m_Context.get(); }
 		RenderQueue& Queue() { return *m_RenderQueue.get(); }						// temp
@@ -37,6 +38,8 @@ namespace wgpu
 		std::pair<WGPUSurfaceTexture, WGPUTextureView> GetNextSurfaceViewData() const;
 
 		void CreateVertexBuffer(size_t capacity);
+		void InitDepthBuffer();
+		void ReleaseDepthBuffer();
 
 		std::unique_ptr<GraphicsContext> m_Context{ nullptr };
 		std::unique_ptr<RenderQueue> m_RenderQueue{ nullptr };
@@ -51,6 +54,8 @@ namespace wgpu
 		};
 
 		VertexBuffer m_VertexBuffer{};
+		WGPUTexture m_DepthTexture{ nullptr };
+		WGPUTextureView m_DepthTextureView{ nullptr };
 	};
 }
 

@@ -7,6 +7,7 @@ bool wgpu::Renderer2D::Init(SDL_Window* window)
 	try
 	{
 		m_Context = std::make_unique<GraphicsContext>(window);
+		InitDepthBuffer();
 		m_RenderQueue = std::make_unique<RenderQueue>();
 		CreateVertexBuffer(100 * sizeof(Vertex));
 	}
@@ -68,6 +69,8 @@ void wgpu::Renderer2D::Render() const
 		// describe render pass
 		WGPURenderPassDescriptor renderPassDesc{};
 		renderPassDesc.nextInChain = nullptr;
+		renderPassDesc.depthStencilAttachment = nullptr;
+		renderPassDesc.timestampWrites = nullptr;
 
 		WGPURenderPassColorAttachment renderPassColorAttachment{};
 		renderPassColorAttachment.view = targetView;
@@ -75,9 +78,27 @@ void wgpu::Renderer2D::Render() const
 		renderPassColorAttachment.loadOp = WGPULoadOp_Clear;
 		renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
 		renderPassColorAttachment.clearValue = { m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a };
+		renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
 
 		renderPassDesc.colorAttachmentCount = 1;
 		renderPassDesc.colorAttachments = &renderPassColorAttachment;
+
+		// Setup depth/stencil
+		WGPURenderPassDepthStencilAttachment depthStencilAttachment{};
+
+		depthStencilAttachment.view = m_DepthTextureView;
+		depthStencilAttachment.depthClearValue = 1.f;
+		depthStencilAttachment.depthLoadOp = WGPULoadOp_Clear;
+		depthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
+		depthStencilAttachment.depthReadOnly = false;
+
+		// Stencil setup, mandatory but unused
+		depthStencilAttachment.stencilClearValue = 0;
+		depthStencilAttachment.stencilLoadOp = WGPULoadOp_Clear;
+		depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Store;
+		depthStencilAttachment.stencilReadOnly = true;
+
+		renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
 
 		// begin render pass
 		WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
@@ -129,7 +150,10 @@ void wgpu::Renderer2D::SetCamera(const Camera2D& camera)
 void wgpu::Renderer2D::Resize()
 {
 	m_Context->DestroySurface();
+	ReleaseDepthBuffer();
+
 	m_Context->InitSurface();
+	InitDepthBuffer();
 
 	m_Camera.SetAspectRatio(m_Context->GetAspectRatio());
 }
@@ -170,4 +194,41 @@ void wgpu::Renderer2D::CreateVertexBuffer(size_t capacity)
 
 	m_VertexBuffer.buffer = wgpuDeviceCreateBuffer(m_Context->GetDevice(), &desc);
 	m_VertexBuffer.capacity = capacity;
+}
+
+void wgpu::Renderer2D::InitDepthBuffer()
+{
+	WGPUTextureFormat depthTextureFormat = WGPUTextureFormat_Depth24Plus;
+
+	// Create the depth texture
+	WGPUTextureDescriptor textureDesc{};
+	textureDesc.dimension = WGPUTextureDimension_2D;
+	textureDesc.format = depthTextureFormat;
+	textureDesc.mipLevelCount = 1;
+	textureDesc.sampleCount = 1;
+
+	glm::u32vec2 size = m_Context->GetWindowSize();
+	textureDesc.size = { size.x, size.y, 1 };
+
+	textureDesc.usage = WGPUTextureUsage_RenderAttachment;
+	textureDesc.viewFormatCount = 1;
+	textureDesc.viewFormats = &depthTextureFormat;
+	m_DepthTexture = wgpuDeviceCreateTexture(m_Context->GetDevice(), &textureDesc);
+
+	WGPUTextureViewDescriptor viewDesc{};
+	viewDesc.aspect = WGPUTextureAspect_DepthOnly;
+	viewDesc.baseArrayLayer = 0;
+	viewDesc.arrayLayerCount = 1;
+	viewDesc.baseMipLevel = 0;
+	viewDesc.mipLevelCount = 1;
+	viewDesc.dimension = WGPUTextureViewDimension_2D;
+	viewDesc.format = depthTextureFormat;
+	m_DepthTextureView = wgpuTextureCreateView(m_DepthTexture, &viewDesc);
+}
+
+void wgpu::Renderer2D::ReleaseDepthBuffer()
+{
+	wgpuTextureViewRelease(m_DepthTextureView);
+	wgpuTextureDestroy(m_DepthTexture);
+	wgpuTextureRelease(m_DepthTexture);
 }

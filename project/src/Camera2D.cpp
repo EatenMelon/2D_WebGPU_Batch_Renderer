@@ -50,7 +50,8 @@ const CameraData& wgpu::Camera2D::GetCameraData()
 	const float viewHeight{ m_Zoom };
 	const float viewWidth{ viewHeight * m_AspectRatio };
 
-	m_Data.projection = glm::ortho
+	// I use orthoZO because it suits webGPU's Zero to One depth range
+	m_Data.projection = glm::orthoZO
 	(
 		-viewWidth / 2.f,
 		viewWidth / 2.f,

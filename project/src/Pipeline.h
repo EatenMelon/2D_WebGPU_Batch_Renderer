@@ -18,7 +18,7 @@ namespace wgpu
 		Pipeline& operator=(Pipeline&&) = delete;
 
 		WGPURenderPipeline GetPipeline() const { return m_Pipeline; }
-		const GraphicsContext* GetGraphicsContext() const { return m_Shader->GetGraphicsContext(); }
+		const GraphicsContext* GetGraphicsContext() const { return m_Shader->GetRenderer()->GetContext(); }
 		const BindGroupLayout* GetBindGroupLayout() const { return m_BindGroupLayout; }
 
 	private:

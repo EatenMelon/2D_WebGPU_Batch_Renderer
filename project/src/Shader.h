@@ -3,14 +3,14 @@
 
 #include <filesystem>
 
-#include "GraphicsContext.h"
+#include "Renderer2D.h"
 
 namespace wgpu
 {
 	class Shader final
 	{
 	public:
-		Shader(const GraphicsContext& context, const std::filesystem::path& path);
+		Shader(const Renderer2D& renderer, const std::filesystem::path& path);
 		~Shader() noexcept;
 
 		Shader(const Shader&) = delete;
@@ -19,12 +19,12 @@ namespace wgpu
 		Shader& operator=(Shader&&) = delete;
 
 		WGPUShaderModule GetShaderModule() const { return m_ShaderModule; }
-		const GraphicsContext* GetGraphicsContext() const { return m_Context; }
+		const Renderer2D* GetRenderer() const { return m_Renderer; }
 
 	private:
 		WGPUShaderModule m_ShaderModule{ nullptr };
 
-		const GraphicsContext* m_Context{ nullptr };
+		const Renderer2D* m_Renderer{ nullptr };
 	};
 }
 

@@ -1,8 +1,8 @@
 #include "Shader.h"
 #include <fstream>
 
-wgpu::Shader::Shader(const GraphicsContext& context, const std::filesystem::path& path)
-    : m_Context{ &context }
+wgpu::Shader::Shader(const Renderer2D& renderer, const std::filesystem::path& path)
+    : m_Renderer{ &renderer }
 {
     std::ifstream file(path);
 
@@ -25,7 +25,7 @@ wgpu::Shader::Shader(const GraphicsContext& context, const std::filesystem::path
     WGPUShaderModuleDescriptor shaderDesc{};
     shaderDesc.nextInChain = &shaderCodeDesc.chain;
 
-    m_ShaderModule = wgpuDeviceCreateShaderModule(m_Context->GetDevice(), &shaderDesc);
+    m_ShaderModule = wgpuDeviceCreateShaderModule(m_Renderer->GetContext()->GetDevice(), &shaderDesc);
 }
 
 wgpu::Shader::~Shader() noexcept

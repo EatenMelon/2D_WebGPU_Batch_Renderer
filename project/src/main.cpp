@@ -21,16 +21,16 @@ int main()
 	renderer.SetClearColor(0.05f, 0.05f, 0.05f);
 
 	//wgpu::Shader shader{ *renderer.GetContext(), "resources/SolidColorMultRGBA.wgsl" };
-	wgpu::Shader shader{ *renderer.GetContext(), "resources/CameraTest.wgsl" };
+	wgpu::Shader shader{ renderer, "resources/CameraTest.wgsl" };
 
 	wgpu::Texture2D texture{ *renderer.GetContext(), "resources/texture.jpg" };
-	wgpu::Sampler sampler{ *renderer.GetContext(), wgpu::Sampler::Preset::PixelArt };
+	wgpu::Sampler sampler{ *renderer.GetContext(), wgpu::Sampler::Preset::Smooth };
 
 	wgpu::BindGroupLayout layout{};
 	layout.AddTextureEntry(0);
 	layout.AddSamplerEntry(1);
 	layout.AddUniformEntry<CameraData>(2, wgpu::BindingVisibility::VertexShaderStage);
-	layout.ConfirmLayout(*shader.GetGraphicsContext());
+	layout.ConfirmLayout(*shader.GetRenderer()->GetContext());
 
 	wgpu::Pipeline pipeline{ shader, &layout };
 	wgpu::Material material{ pipeline };
@@ -38,29 +38,50 @@ int main()
 	material.SetSampler(1, &sampler);
 
 	Vertex v00{};	// bottom-left
-	v00.position = glm::vec3{ -0.5f, -0.5f, 0.f };
+	v00.position = glm::vec3{ -0.25f, -0.25f, 0.1f };
 	v00.color.r = 1.f;
 	v00.uv = glm::vec2{ 0.f, 1.f };
 
 	Vertex v01{};	// bottom-right
-	v01.position = glm::vec3{ 0.5f, -0.5f, 0.f };
-	v01.color.g = 1.f;
+	v01.position = glm::vec3{ 0.25f, -0.25f, 0.1f };
+	v01.color.r = 1.f;
 	v01.uv = glm::vec2{ 1.f, 1.f };
 
 	Vertex v02{};	// top-right
-	v02.position = glm::vec3{ 0.5f, 0.5f, 0.f };
-	v02.color.b = 1.f;
+	v02.position = glm::vec3{ 0.25f, 0.25f, 0.1f };
+	v02.color.r = 1.f;
 	v02.uv = glm::vec2{ 1.f, 0.f };
 
 	Vertex v03{};	// top-left
-	v03.position = glm::vec3{ -0.5f, 0.5f, 0.f };
-	v03.color.g = 1.f;
+	v03.position = glm::vec3{ -0.25f, 0.25f, 0.1f };
+	v03.color.r = 1.f;
 	v03.uv = glm::vec2{ 0.f, 0.f };
+
+	//
+	Vertex v10{};	// bottom-left
+	v10.position = glm::vec3{ -0.5f, -0.5f, 0.f };
+	v10.color.b = 1.f;
+	v10.uv = glm::vec2{ 0.f, 1.f };
+
+	Vertex v11{};	// bottom-right
+	v11.position = glm::vec3{ 0.5f, -0.5f, 0.f };
+	v11.color.b = 1.f;
+	v11.uv = glm::vec2{ 1.f, 1.f };
+
+	Vertex v12{};	// top-right
+	v12.position = glm::vec3{ 0.5f, 0.5f, 0.f };
+	v12.color.b = 1.f;
+	v12.uv = glm::vec2{ 1.f, 0.f };
+
+	Vertex v13{};	// top-left
+	v13.position = glm::vec3{ -0.5f, 0.5f, 0.f };
+	v13.color.b = 1.f;
+	v13.uv = glm::vec2{ 0.f, 0.f };
 
 	wgpu::Camera2D camera{};
 
 	//camera.SetZoom(-10.f);
-	camera.Focus(glm::vec2(0.25f, 0.f));
+	//camera.Focus(glm::vec2(0.25f, 0.f));
 
 	renderer.SetCamera(camera);
 
@@ -101,6 +122,9 @@ int main()
 		{
 			renderer.Queue().PushTriangle(material, v00, v01, v02);
 			renderer.Queue().PushTriangle(material, v00, v02, v03);
+
+			renderer.Queue().PushTriangle(material, v10, v11, v12);
+			renderer.Queue().PushTriangle(material, v10, v12, v13);
 		}
 		renderer.EndFrame();
 		renderer.Render();
