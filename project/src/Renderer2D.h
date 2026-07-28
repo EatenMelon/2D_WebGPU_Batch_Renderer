@@ -25,7 +25,7 @@ namespace wgpu
 		void Quit();
 
 		void SetClearColor(float r, float g, float b, float a = 1.f);
-		void SetCamera(const Camera2D& camera);
+		void SetCamera(const std::shared_ptr<Camera2D>& camera);
 		void Resize();
 
 		WGPUBuffer GetVertexBuffer() const { return m_VertexBuffer.buffer; }
@@ -45,7 +45,7 @@ namespace wgpu
 		std::unique_ptr<RenderQueue> m_RenderQueue{ nullptr };
 
 		ColorF m_ClearColor{ 0.f, 0.f, 0.f, 1.f };
-		Camera2D m_Camera{};
+		std::shared_ptr<Camera2D> m_Camera{ nullptr };
 
 		struct VertexBuffer
 		{

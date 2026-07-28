@@ -1,14 +1,21 @@
 #include "Shader.h"
 #include <fstream>
 
-wgpu::Shader::Shader(const Renderer2D& renderer, const std::filesystem::path& path)
+wgpu::Shader::Shader(const Renderer2D& renderer, const std::string& shader, ParsingMethod method)
     : m_Renderer{ &renderer }
 {
-    std::ifstream file(path);
+
+    if (method != ParsingMethod::FromFile)
+    {
+        LoadShaderFromSource(shader);
+        return;
+    }
+    
+    std::ifstream file(shader);
 
     if (!file.is_open())
     {
-        throw std::runtime_error("Failed to open " + path.filename().string() + "!");
+        throw std::runtime_error("Failed to open " + shader + "!");
     }
 
     file.seekg(0, std::ios::end);
@@ -17,6 +24,16 @@ wgpu::Shader::Shader(const Renderer2D& renderer, const std::filesystem::path& pa
     file.seekg(0);
     file.read(shaderSource.data(), size);
 
+    LoadShaderFromSource(shaderSource);
+}
+
+wgpu::Shader::~Shader() noexcept
+{
+    wgpuShaderModuleRelease(m_ShaderModule);
+}
+
+void wgpu::Shader::LoadShaderFromSource(const std::string& shaderSource)
+{
     WGPUShaderSourceWGSL shaderCodeDesc{};
     shaderCodeDesc.chain.next = nullptr;
     shaderCodeDesc.chain.sType = WGPUSType_ShaderSourceWGSL;
@@ -26,9 +43,4 @@ wgpu::Shader::Shader(const Renderer2D& renderer, const std::filesystem::path& pa
     shaderDesc.nextInChain = &shaderCodeDesc.chain;
 
     m_ShaderModule = wgpuDeviceCreateShaderModule(m_Renderer->GetContext()->GetDevice(), &shaderDesc);
-}
-
-wgpu::Shader::~Shader() noexcept
-{
-    wgpuShaderModuleRelease(m_ShaderModule);
 }

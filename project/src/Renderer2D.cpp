@@ -17,7 +17,8 @@ bool wgpu::Renderer2D::Init(SDL_Window* window)
 		return false;
 	}
 
-	m_Camera.SetAspectRatio(m_Context->GetAspectRatio());
+	m_Camera = std::make_shared<wgpu::Camera2D>();
+	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
 
 	return true;
 }
@@ -50,7 +51,7 @@ void wgpu::Renderer2D::EndFrame()
 		CreateVertexBuffer(bufferSize * 2);
 	}
 
-	m_RenderQueue->SetCamera(m_Camera.GetCameraData());
+	m_RenderQueue->SetCamera(m_Camera->GetCameraData());
 }
 
 void wgpu::Renderer2D::Render() const
@@ -141,10 +142,10 @@ void wgpu::Renderer2D::SetClearColor(float r, float g, float b, float a)
 	m_ClearColor.vec = glm::vec4(r, g, b, a);
 }
 
-void wgpu::Renderer2D::SetCamera(const Camera2D& camera)
+void wgpu::Renderer2D::SetCamera(const std::shared_ptr<Camera2D>& camera)
 {
 	m_Camera = camera;
-	m_Camera.SetAspectRatio(m_Context->GetAspectRatio());
+	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
 }
 
 void wgpu::Renderer2D::Resize()
@@ -155,7 +156,7 @@ void wgpu::Renderer2D::Resize()
 	m_Context->InitSurface();
 	InitDepthBuffer();
 
-	m_Camera.SetAspectRatio(m_Context->GetAspectRatio());
+	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
 }
 
 std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceViewData() const

@@ -18,6 +18,9 @@ namespace wgpu
 		void Move(glm::vec2 deltaPos);
 
 		const CameraData& GetCameraData();
+		float GetAspectRatio() const { return m_AspectRatio; }
+		float GetZoom() const { return m_Zoom; }
+		glm::vec2 GetFocalPoint() const { return m_FocalPoint; }
 
 	private:
 		CameraData m_Data{};

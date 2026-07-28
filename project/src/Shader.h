@@ -10,7 +10,9 @@ namespace wgpu
 	class Shader final
 	{
 	public:
-		Shader(const Renderer2D& renderer, const std::filesystem::path& path);
+		enum class ParsingMethod{ FromFile, FromString };
+
+		Shader(const Renderer2D& renderer, const std::string& shader, ParsingMethod method = ParsingMethod::FromFile);
 		~Shader() noexcept;
 
 		Shader(const Shader&) = delete;
@@ -22,6 +24,8 @@ namespace wgpu
 		const Renderer2D* GetRenderer() const { return m_Renderer; }
 
 	private:
+		void LoadShaderFromSource(const std::string& shaderSource);
+
 		WGPUShaderModule m_ShaderModule{ nullptr };
 
 		const Renderer2D* m_Renderer{ nullptr };

@@ -78,7 +78,7 @@ int main()
 	v13.color.b = 1.f;
 	v13.uv = glm::vec2{ 0.f, 0.f };
 
-	wgpu::Camera2D camera{};
+	auto camera{ std::make_shared<wgpu::Camera2D>() };
 
 	//camera.SetZoom(-10.f);
 	//camera.Focus(glm::vec2(0.25f, 0.f));
@@ -100,8 +100,8 @@ int main()
 				break;
 
 			case SDL_EVENT_MOUSE_WHEEL:
-				camera.Zoom(event.wheel.y / 100.f);
-				renderer.SetCamera(camera);
+				camera->Zoom(event.wheel.y / 100.f);
+				//renderer.SetCamera(camera);
 				break;
 
 			case SDL_EVENT_MOUSE_MOTION:
@@ -109,8 +109,8 @@ int main()
 
 				glm::vec2 motion{ -event.motion.xrel, event.motion.yrel };
 
-				camera.Move(motion / 1000.f);
-				renderer.SetCamera(camera);
+				camera->Move(motion / 1000.f);
+				//renderer.SetCamera(camera);
 				break;
 
 			default:
