@@ -42,6 +42,11 @@ void wgpu::Renderer2D::BeginFrame()
 	wgpuCommandEncoderRelease(encoder);
 }
 
+void wgpu::Renderer2D::Submit(Material& mat, const Vertex& v0, const Vertex& v1, const Vertex& v2)
+{
+	m_RenderQueue->PushTriangle(mat, v0, v1, v2);
+}
+
 void wgpu::Renderer2D::EndFrame()
 {
 	size_t bufferSize = m_RenderQueue->GetBufferSize();

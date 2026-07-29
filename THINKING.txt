@@ -76,3 +76,11 @@ difficult without knowing the type or size.
 		i noticed this a little late though, so i'll have to change my BindGroupLayout and Material abstractions
 
 The wgsl shader language used by webGPU also has more possible objects it can bind, but i'll ignore those for now.
+
+--- built-in rendering feature ---
+
+i can now render triangles using materials, of course i want some built in features, 
+like drawing basic shapes and texture, for these i shouldn't have to make custom shaders, pipelines, materials, etc...
+
+The problem with this is just that, idk who to give that responsability too, 
+shoving these built-in materials, pipelines and shaders in the renderer doesn't seem like a maintainable approach.

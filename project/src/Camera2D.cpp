@@ -43,7 +43,7 @@ void wgpu::Camera2D::Move(glm::vec2 deltaPos)
 	m_UpdateCameraData = true;
 }
 
-const CameraData& wgpu::Camera2D::GetCameraData()
+const wgpu::CameraData& wgpu::Camera2D::GetCameraData()
 {
 	if (!m_UpdateCameraData) return m_Data;
 

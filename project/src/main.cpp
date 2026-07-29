@@ -29,7 +29,7 @@ int main()
 	wgpu::BindGroupLayout layout{};
 	layout.AddTextureEntry(0);
 	layout.AddSamplerEntry(1);
-	layout.AddUniformEntry<CameraData>(2, wgpu::BindingVisibility::VertexShaderStage);
+	layout.AddUniformEntry<wgpu::CameraData>(2, wgpu::BindingVisibility::VertexShaderStage);
 	layout.ConfirmLayout(*shader.GetRenderer()->GetContext());
 
 	wgpu::Pipeline pipeline{ shader, &layout };
@@ -37,43 +37,42 @@ int main()
 	material.SetTexture(0, &texture);
 	material.SetSampler(1, &sampler);
 
-	Vertex v00{};	// bottom-left
+	wgpu::Vertex v00{};	// bottom-left
 	v00.position = glm::vec3{ -0.25f, -0.25f, 0.1f };
 	v00.color.r = 1.f;
 	v00.uv = glm::vec2{ 0.f, 1.f };
 
-	Vertex v01{};	// bottom-right
+	wgpu::Vertex v01{};	// bottom-right
 	v01.position = glm::vec3{ 0.25f, -0.25f, 0.1f };
 	v01.color.r = 1.f;
 	v01.uv = glm::vec2{ 1.f, 1.f };
 
-	Vertex v02{};	// top-right
+	wgpu::Vertex v02{};	// top-right
 	v02.position = glm::vec3{ 0.25f, 0.25f, 0.1f };
 	v02.color.r = 1.f;
 	v02.uv = glm::vec2{ 1.f, 0.f };
 
-	Vertex v03{};	// top-left
+	wgpu::Vertex v03{};	// top-left
 	v03.position = glm::vec3{ -0.25f, 0.25f, 0.1f };
 	v03.color.r = 1.f;
 	v03.uv = glm::vec2{ 0.f, 0.f };
 
-	//
-	Vertex v10{};	// bottom-left
+	wgpu::Vertex v10{};	// bottom-left
 	v10.position = glm::vec3{ -0.5f, -0.5f, 0.f };
 	v10.color.b = 1.f;
 	v10.uv = glm::vec2{ 0.f, 1.f };
 
-	Vertex v11{};	// bottom-right
+	wgpu::Vertex v11{};	// bottom-right
 	v11.position = glm::vec3{ 0.5f, -0.5f, 0.f };
 	v11.color.b = 1.f;
 	v11.uv = glm::vec2{ 1.f, 1.f };
 
-	Vertex v12{};	// top-right
+	wgpu::Vertex v12{};	// top-right
 	v12.position = glm::vec3{ 0.5f, 0.5f, 0.f };
 	v12.color.b = 1.f;
 	v12.uv = glm::vec2{ 1.f, 0.f };
 
-	Vertex v13{};	// top-left
+	wgpu::Vertex v13{};	// top-left
 	v13.position = glm::vec3{ -0.5f, 0.5f, 0.f };
 	v13.color.b = 1.f;
 	v13.uv = glm::vec2{ 0.f, 0.f };
@@ -109,7 +108,7 @@ int main()
 
 				glm::vec2 motion{ -event.motion.xrel, event.motion.yrel };
 
-				camera->Move(motion / 1000.f);
+				camera->Move(motion / 1000.f * camera->GetZoom());
 				//renderer.SetCamera(camera);
 				break;
 
@@ -120,11 +119,11 @@ int main()
 
 		renderer.BeginFrame();
 		{
-			renderer.Queue().PushTriangle(material, v00, v01, v02);
-			renderer.Queue().PushTriangle(material, v00, v02, v03);
+			renderer.Submit(material, v00, v01, v02);
+			renderer.Submit(material, v00, v02, v03);
 
-			renderer.Queue().PushTriangle(material, v10, v11, v12);
-			renderer.Queue().PushTriangle(material, v10, v12, v13);
+			renderer.Submit(material, v10, v11, v12);
+			renderer.Submit(material, v10, v12, v13);
 		}
 		renderer.EndFrame();
 		renderer.Render();

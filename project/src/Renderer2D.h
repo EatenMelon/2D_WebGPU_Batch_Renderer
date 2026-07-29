@@ -19,6 +19,7 @@ namespace wgpu
 		bool Init(SDL_Window* window);
 
 		void BeginFrame();
+		void Submit(Material& mat, const Vertex& v0, const Vertex& v1, const Vertex& v2);
 		void EndFrame();
 		void Render() const;
 
@@ -32,9 +33,11 @@ namespace wgpu
 		WGPUTexture GetDepthTexture() const { return m_DepthTexture; }
 
 		const GraphicsContext* GetContext() const { return m_Context.get(); }
-		RenderQueue& Queue() { return *m_RenderQueue.get(); }						// temp
 
 	private:
+		ColorF m_ClearColor{ 0.f, 0.f, 0.f, 1.f };
+		std::shared_ptr<Camera2D> m_Camera{ nullptr };
+
 		std::pair<WGPUSurfaceTexture, WGPUTextureView> GetNextSurfaceViewData() const;
 
 		void CreateVertexBuffer(size_t capacity);
@@ -43,9 +46,6 @@ namespace wgpu
 
 		std::unique_ptr<GraphicsContext> m_Context{ nullptr };
 		std::unique_ptr<RenderQueue> m_RenderQueue{ nullptr };
-
-		ColorF m_ClearColor{ 0.f, 0.f, 0.f, 1.f };
-		std::shared_ptr<Camera2D> m_Camera{ nullptr };
 
 		struct VertexBuffer
 		{
