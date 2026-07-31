@@ -5,36 +5,44 @@
 
 namespace wgpu
 {
-
-	// only works for MSVC
-	// but otherwise i get a unnamed struct/union warning
-#pragma warning(push)
-#pragma warning(disable : 4201)
-
-	// just need it to for naming purposes, could just be a vec4
 	struct ColorF
 	{
 		ColorF(float r = 0.f, float g = 0.f, float b = 0.f, float a = 1.f);
 
-		union
-		{
-			struct
-			{
-				float r;
-				float g;
-				float b;
-				float a;
-			};
-
-			glm::vec4 vec;
-		};
+		float r{ 0.f };
+		float g{ 0.f };
+		float b{ 0.f };
+		float a{ 1.f };
 	};
 
-#pragma warning(pop)
+	struct RectF
+	{
+		RectF(const glm::vec2& pos, const glm::vec2& size);
+		RectF(const glm::vec2& pos, float size);
 
-	struct Vertex
+		glm::vec2 position{};
+		glm::vec2 size{};
+	};
+
+	struct EllipseF
+	{
+		EllipseF(const glm::vec2& center, const glm::vec2& radii);
+		EllipseF(const glm::vec2& center, float radius);
+
+		glm::vec2 center{};
+		glm::vec2 radii{};
+	};
+
+	struct Vertex3D
 	{
 		glm::vec3 position{};
+		ColorF color{};
+		glm::vec2 uv{};
+	};
+
+	struct Vertex2D
+	{
+		glm::vec2 position{};
 		ColorF color{};
 		glm::vec2 uv{};
 	};

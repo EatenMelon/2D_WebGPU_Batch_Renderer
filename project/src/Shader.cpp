@@ -1,6 +1,8 @@
 #include "Shader.h"
 #include <fstream>
 
+#include "GraphicsContext.h"
+
 wgpu::Shader::Shader(const Renderer2D& renderer, const std::string& shader, ParsingMethod method)
     : m_Renderer{ &renderer }
 {

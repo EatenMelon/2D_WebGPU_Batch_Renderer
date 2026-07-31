@@ -57,8 +57,8 @@ const wgpu::CameraData& wgpu::Camera2D::GetCameraData()
 		viewWidth / 2.f,
 		-viewHeight / 2.f,
 		viewHeight / 2.f,
-		-1.f,
-		1.f
+		-1000.f,
+		1000.f
 	);
 
 	m_Data.view = glm::translate(glm::mat4(1.f), -glm::vec3(m_FocalPoint, 0.0f));

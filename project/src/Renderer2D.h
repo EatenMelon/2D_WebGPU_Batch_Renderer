@@ -3,9 +3,7 @@
 
 #include <memory>
 #include <utility>
-
-#include "GraphicsContext.h"
-#include "RenderQueue.h"
+#include <wgpu.h>
 
 #include "Camera2D.h"
 
@@ -13,17 +11,24 @@ struct SDL_Window;
 
 namespace wgpu
 {
+	class RenderQueue;
+	class GraphicsContext;
+	class Material;
 	class Renderer2D final
 	{
 	public:
-		bool Init(SDL_Window* window);
+		Renderer2D(SDL_Window* window);
+		~Renderer2D() noexcept;
+
+		Renderer2D(const Renderer2D&) = delete;
+		Renderer2D& operator=(const Renderer2D&) = delete;
+		Renderer2D(Renderer2D&&) = delete;
+		Renderer2D& operator=(Renderer2D&&) = delete;
 
 		void BeginFrame();
-		void Submit(Material& mat, const Vertex& v0, const Vertex& v1, const Vertex& v2);
+		void Submit(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2);
 		void EndFrame();
 		void Render() const;
-
-		void Quit();
 
 		void SetClearColor(float r, float g, float b, float a = 1.f);
 		void SetCamera(const std::shared_ptr<Camera2D>& camera);

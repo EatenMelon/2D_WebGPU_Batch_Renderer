@@ -1,26 +1,25 @@
 #include "Renderer2D.h"
 
+#include "GraphicsContext.h"
+#include "RenderQueue.h"
+
 #include <iostream>
 
-bool wgpu::Renderer2D::Init(SDL_Window* window)
+wgpu::Renderer2D::Renderer2D(SDL_Window* window)
+	: m_Context{ std::make_unique<GraphicsContext>(window) }
+	, m_RenderQueue{ std::make_unique<RenderQueue>() }
+	, m_Camera{ std::make_shared<wgpu::Camera2D>() }
 {
-	try
-	{
-		m_Context = std::make_unique<GraphicsContext>(window);
-		InitDepthBuffer();
-		m_RenderQueue = std::make_unique<RenderQueue>();
-		CreateVertexBuffer(100 * sizeof(Vertex));
-	}
-	catch (const std::exception& ex)
-	{
-		std::cerr << "Failed to initialize 2D renderer:\t" << ex.what() << "\n";
-		return false;
-	}
+	InitDepthBuffer();
+	CreateVertexBuffer(100 * sizeof(Vertex3D));
 
-	m_Camera = std::make_shared<wgpu::Camera2D>();
 	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
+}
 
-	return true;
+wgpu::Renderer2D::~Renderer2D() noexcept
+{
+	wgpuBufferRelease(m_VertexBuffer.buffer);
+	m_VertexBuffer.buffer = nullptr;
 }
 
 void wgpu::Renderer2D::BeginFrame()
@@ -42,7 +41,7 @@ void wgpu::Renderer2D::BeginFrame()
 	wgpuCommandEncoderRelease(encoder);
 }
 
-void wgpu::Renderer2D::Submit(Material& mat, const Vertex& v0, const Vertex& v1, const Vertex& v2)
+void wgpu::Renderer2D::Submit(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2)
 {
 	m_RenderQueue->PushTriangle(mat, v0, v1, v2);
 }
@@ -133,18 +132,9 @@ void wgpu::Renderer2D::Render() const
 	wgpuTextureViewRelease(targetView);
 }
 
-void wgpu::Renderer2D::Quit()
-{
-	wgpuBufferRelease(m_VertexBuffer.buffer);
-	m_VertexBuffer.buffer = nullptr;
-	m_VertexBuffer.capacity = 0;
-
-	m_Context.reset();
-}
-
 void wgpu::Renderer2D::SetClearColor(float r, float g, float b, float a)
 {
-	m_ClearColor.vec = glm::vec4(r, g, b, a);
+	m_ClearColor = ColorF(r, g, b, a);
 }
 
 void wgpu::Renderer2D::SetCamera(const std::shared_ptr<Camera2D>& camera)

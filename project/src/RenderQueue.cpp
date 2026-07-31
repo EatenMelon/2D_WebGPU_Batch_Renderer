@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include "Material.h"
 
-void wgpu::RenderQueue::PushTriangle(Material& mat, const Vertex& v0, const Vertex& v1, const Vertex& v2)
+void wgpu::RenderQueue::PushTriangle(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2)
 {
 	if (m_Batches.contains(&mat))
 	{
@@ -15,7 +15,7 @@ void wgpu::RenderQueue::PushTriangle(Material& mat, const Vertex& v0, const Vert
 		return;
 	}
 
-	auto [itr, inserted] = m_Batches.emplace(&mat, std::vector<Vertex>());
+	auto [itr, inserted] = m_Batches.emplace(&mat, std::vector<Vertex3D>());
 
 	if (!inserted)
 	{
@@ -37,14 +37,14 @@ void wgpu::RenderQueue::Render(const GraphicsContext& context, WGPUBuffer vertex
 	if (m_Batches.empty()) return;
 
 	// write to the vertex buffer
-	std::vector<Vertex> allVertices{};
+	std::vector<Vertex3D> allVertices{};
 
 	for (const auto& [mat, batch] : m_Batches)
 	{
 		allVertices.insert(allVertices.end(), batch.begin(), batch.end());
 	}
 
-	wgpuQueueWriteBuffer(context.GetQueue(), vertexBuffer, 0, allVertices.data(), allVertices.size() * sizeof(Vertex));
+	wgpuQueueWriteBuffer(context.GetQueue(), vertexBuffer, 0, allVertices.data(), allVertices.size() * sizeof(Vertex3D));
 
 	// render vertices...
 	uint64_t offset{ 0 };
@@ -58,10 +58,10 @@ void wgpu::RenderQueue::Render(const GraphicsContext& context, WGPUBuffer vertex
 			wgpuRenderPassEncoderSetBindGroup(renderPass, 0, mat->GetBindGroup(), 0, nullptr);
 		}
 
-		wgpuRenderPassEncoderSetVertexBuffer(renderPass, 0, vertexBuffer, offset, batch.size() * sizeof(Vertex));
+		wgpuRenderPassEncoderSetVertexBuffer(renderPass, 0, vertexBuffer, offset, batch.size() * sizeof(Vertex3D));
 		wgpuRenderPassEncoderDraw(renderPass, static_cast<uint32_t>(batch.size()), 1, 0, 0);
 		
-		offset += batch.size() * sizeof(Vertex);
+		offset += batch.size() * sizeof(Vertex3D);
 	}
 }
 
@@ -86,5 +86,5 @@ size_t wgpu::RenderQueue::GetBufferSize() const
 		bufferSize += batch.size();
 	}
 
-	return bufferSize * sizeof(Vertex);
+	return bufferSize * sizeof(Vertex3D);
 }

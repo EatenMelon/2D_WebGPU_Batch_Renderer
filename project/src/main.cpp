@@ -15,8 +15,7 @@ int main()
 	glm::ivec2 size{ 800, 600 };
 	SDL_Window* window = SDL_CreateWindow("Hello WebGPU", size.x, size.y, SDL_WINDOW_RESIZABLE);
 
-	wgpu::Renderer2D renderer{};
-	if (!renderer.Init(window)) return -1;
+	wgpu::Renderer2D renderer{ window };
 
 	renderer.SetClearColor(0.05f, 0.05f, 0.05f);
 
@@ -37,50 +36,50 @@ int main()
 	material.SetTexture(0, &texture);
 	material.SetSampler(1, &sampler);
 
-	wgpu::Vertex v00{};	// bottom-left
-	v00.position = glm::vec3{ -0.25f, -0.25f, 0.1f };
+	float layer1{ 10.f };
+	float layer2{ 5.f };
+
+	wgpu::Vertex3D v00{};	// bottom-left
+	v00.position = glm::vec3{ -0.25f, -0.25f, layer1 };
 	v00.color.r = 1.f;
 	v00.uv = glm::vec2{ 0.f, 1.f };
 
-	wgpu::Vertex v01{};	// bottom-right
-	v01.position = glm::vec3{ 0.25f, -0.25f, 0.1f };
+	wgpu::Vertex3D v01{};	// bottom-right
+	v01.position = glm::vec3{ 0.25f, -0.25f, layer1 };
 	v01.color.r = 1.f;
 	v01.uv = glm::vec2{ 1.f, 1.f };
 
-	wgpu::Vertex v02{};	// top-right
-	v02.position = glm::vec3{ 0.25f, 0.25f, 0.1f };
+	wgpu::Vertex3D v02{};	// top-right
+	v02.position = glm::vec3{ 0.25f, 0.25f, layer1 };
 	v02.color.r = 1.f;
 	v02.uv = glm::vec2{ 1.f, 0.f };
 
-	wgpu::Vertex v03{};	// top-left
-	v03.position = glm::vec3{ -0.25f, 0.25f, 0.1f };
+	wgpu::Vertex3D v03{};	// top-left
+	v03.position = glm::vec3{ -0.25f, 0.25f, layer1 };
 	v03.color.r = 1.f;
 	v03.uv = glm::vec2{ 0.f, 0.f };
 
-	wgpu::Vertex v10{};	// bottom-left
-	v10.position = glm::vec3{ -0.5f, -0.5f, 0.f };
+	wgpu::Vertex3D v10{};	// bottom-left
+	v10.position = glm::vec3{ -0.5f, -0.5f, layer2 };
 	v10.color.b = 1.f;
 	v10.uv = glm::vec2{ 0.f, 1.f };
 
-	wgpu::Vertex v11{};	// bottom-right
-	v11.position = glm::vec3{ 0.5f, -0.5f, 0.f };
+	wgpu::Vertex3D v11{};	// bottom-right
+	v11.position = glm::vec3{ 0.5f, -0.5f, layer2 };
 	v11.color.b = 1.f;
 	v11.uv = glm::vec2{ 1.f, 1.f };
 
-	wgpu::Vertex v12{};	// top-right
-	v12.position = glm::vec3{ 0.5f, 0.5f, 0.f };
+	wgpu::Vertex3D v12{};	// top-right
+	v12.position = glm::vec3{ 0.5f, 0.5f, layer2 };
 	v12.color.b = 1.f;
 	v12.uv = glm::vec2{ 1.f, 0.f };
 
-	wgpu::Vertex v13{};	// top-left
-	v13.position = glm::vec3{ -0.5f, 0.5f, 0.f };
+	wgpu::Vertex3D v13{};	// top-left
+	v13.position = glm::vec3{ -0.5f, 0.5f, layer2 };
 	v13.color.b = 1.f;
 	v13.uv = glm::vec2{ 0.f, 0.f };
 
 	auto camera{ std::make_shared<wgpu::Camera2D>() };
-
-	//camera.SetZoom(-10.f);
-	//camera.Focus(glm::vec2(0.25f, 0.f));
 
 	renderer.SetCamera(camera);
 
@@ -107,7 +106,7 @@ int main()
 				if ((event.motion.state & SDL_BUTTON_LEFT) != SDL_BUTTON_LEFT) break;
 
 				glm::vec2 motion{ -event.motion.xrel, event.motion.yrel };
-
+				//std::cout << "[" << motion.x << ", " << motion.y << "]\n";
 				camera->Move(motion / 1000.f * camera->GetZoom());
 				//renderer.SetCamera(camera);
 				break;
@@ -128,7 +127,6 @@ int main()
 		renderer.EndFrame();
 		renderer.Render();
 	}
-	renderer.Quit();
 
 	SDL_DestroyWindow(window);
 	SDL_Quit();

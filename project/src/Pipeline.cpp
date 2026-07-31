@@ -69,7 +69,7 @@ wgpu::Pipeline::Pipeline(const Shader& shader, const BindGroupLayout* bindGroupL
 		vertexBufferLayout.attributeCount = static_cast<uint32_t>(vertexAttribs.size());
 		vertexBufferLayout.attributes = vertexAttribs.data();
 
-		vertexBufferLayout.arrayStride = sizeof(Vertex);
+		vertexBufferLayout.arrayStride = sizeof(Vertex3D);
 		vertexBufferLayout.stepMode = WGPUVertexStepMode_Vertex;
 	}
 	desc.vertex.bufferCount = 1;
