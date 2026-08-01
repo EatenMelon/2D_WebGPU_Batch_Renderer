@@ -84,3 +84,14 @@ like drawing basic shapes and texture, for these i shouldn't have to make custom
 
 The problem with this is just that, idk who to give that responsability too, 
 shoving these built-in materials, pipelines and shaders in the renderer doesn't seem like a maintainable approach.
+
+--- vertex limits ---
+
+During implementing the FillEllipse function, i encountered some limitations of my vertex buffer;
+
+Currently i'm using one vertex buffer which has a decent chance of overflowing the device limits.
+Since i'm batching anyways, i can make a new vertex buffer before it ends up overflowing...
+
+So i'll have to be more carefull while iterating over batches in the renderQueue.
+
+famous last words: "I'll fix it later!"

@@ -161,6 +161,11 @@ void wgpu::Renderer2D::Resize()
 	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
 }
 
+std::shared_ptr<wgpu::Camera2D> wgpu::Renderer2D::GetCamera() const
+{
+	return m_Camera;
+}
+
 std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceViewData() const
 {
 	WGPUSurfaceTexture surfaceTexture{};

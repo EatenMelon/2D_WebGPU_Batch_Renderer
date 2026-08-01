@@ -35,6 +35,8 @@ namespace wgpu
 		void SetCamera(const std::shared_ptr<Camera2D>& camera);
 		void Resize();
 
+		std::shared_ptr<Camera2D> GetCamera() const;
+
 		WGPUBuffer GetVertexBuffer() const { return m_VertexBuffer.buffer; }
 		WGPUTexture GetDepthTexture() const { return m_DepthTexture; }
 

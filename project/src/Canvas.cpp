@@ -14,12 +14,12 @@ wgpu::Canvas::Canvas(SDL_Window* window)
 
 wgpu::Canvas::~Canvas() noexcept = default;
 
-void wgpu::Canvas::BeginFrame()
+void wgpu::Canvas::BeginFrame() const
 {
 	m_Renderer->BeginFrame();
 }
 
-void wgpu::Canvas::EndFrame()
+void wgpu::Canvas::EndFrame() const
 {
 	m_Renderer->EndFrame();
 	m_Renderer->Render();
@@ -40,7 +40,7 @@ void wgpu::Canvas::Resize()
 	m_Renderer->Resize();
 }
 
-void wgpu::Canvas::DrawLine(const glm::vec2& start, const glm::vec2& end, float lineWidth)
+void wgpu::Canvas::DrawLine(const glm::vec2& start, const glm::vec2& end, float lineWidth) const
 {
 	const glm::vec2 diff{ end - start };
 	const float angle = atan2f(diff.y, diff.x);
@@ -66,25 +66,25 @@ void wgpu::Canvas::DrawLine(const glm::vec2& start, const glm::vec2& end, float 
 		p = glm::vec2(result.x, result.y);
 	}
 
-	DrawQuad(points[0], points[1], points[2], points[3]);
+	RenderQuad(points[0], points[1], points[2], points[3]);
 }
 
-void wgpu::Canvas::FillRect(float left, float bottom, float width, float height)
+void wgpu::Canvas::FillRect(float left, float bottom, float width, float height) const
 {
 	const auto p0 = glm::vec2{ left, bottom + height };
 	const auto p1 = glm::vec2{ left, bottom };
 	const auto p2 = glm::vec2{ left + width, bottom };
 	const auto p3 = glm::vec2{ left + width, bottom + height };
 
-	DrawQuad(p0, p1, p2, p3);
+	RenderQuad(p0, p1, p2, p3);
 }
 
-void wgpu::Canvas::FillRect(const RectF& rect)
+void wgpu::Canvas::FillRect(const RectF& rect) const
 {
 	FillRect(rect.pos.x, rect.pos.y, rect.size.x, rect.size.y);
 }
 
-void wgpu::Canvas::DrawRect(float left, float bottom, float width, float height, float lineWidth)
+void wgpu::Canvas::DrawRect(float left, float bottom, float width, float height, float lineWidth) const
 {
 	const glm::vec2 inner{ left + lineWidth / 2.f, bottom + lineWidth / 2.f };
 	const glm::vec2 outer{ left - lineWidth / 2.f, bottom - lineWidth / 2.f };
@@ -96,9 +96,52 @@ void wgpu::Canvas::DrawRect(float left, float bottom, float width, float height,
 	FillRect(outer.x, outer.y + height, width + lineWidth, lineWidth);
 }
 
-void wgpu::Canvas::DrawRect(const RectF & rect, float lineWidth)
+void wgpu::Canvas::DrawRect(const RectF & rect, float lineWidth) const
 {
 	DrawRect(rect.pos.x, rect.pos.y, rect.size.x, rect.size.y, lineWidth);
+}
+
+void wgpu::Canvas::FillEllipse(float x, float y, float xRadius, float yRadius) const
+{
+	auto getPoint = [&](float angle) -> glm::vec2
+		{
+			return glm::vec2
+			{
+				x + xRadius * cosf(angle),
+				y + yRadius * sinf(angle)
+			};
+		};
+
+	auto draw = [&](float angleA, float angleB) -> void
+		{
+			auto p0 = getPoint(angleA);
+			auto p1 = getPoint(glm::pi<float>() - angleA);
+			auto p2 = getPoint(glm::pi<float>() - angleB);
+			auto p3 = getPoint(angleB);
+
+			RenderQuad(p0, p1, p2, p3);
+		};
+
+	const float zoom{ GetCamera()->GetZoom() };
+
+	constexpr float quarter{ glm::pi<float>() / 2 };
+	constexpr float minIncr{ quarter / 15.f };
+	constexpr float maxIncr{ quarter / 2.f };
+
+	const float increment{ glm::clamp(zoom / 5.f, minIncr, maxIncr) };
+
+	// an ellipse draws at least 4 triangles (12 vertices), and at most 56 triangles (168 vertices)
+	for (float angle{ increment }; angle < quarter; angle += increment)
+	{
+		const float prevAngle{ angle - increment };
+		draw(angle, prevAngle);
+		draw(-prevAngle, -angle);
+	}
+}
+
+void wgpu::Canvas::FillEllipse(const EllipseF& ellipse) const
+{
+	FillEllipse(ellipse.center.x, ellipse.center.y, ellipse.radii.x, ellipse.radii.y);
 }
 
 void wgpu::Canvas::SetDrawColor(const ColorF& color)
@@ -121,7 +164,12 @@ float wgpu::Canvas::GetDrawLayer() const
 	return m_DrawLayer;
 }
 
-void wgpu::Canvas::DrawQuad(const glm::vec2 p0, const glm::vec2 p1, const glm::vec2 p2, const glm::vec2 p3)
+std::shared_ptr<wgpu::Camera2D> wgpu::Canvas::GetCamera() const
+{
+	return m_Renderer->GetCamera();
+}
+
+void wgpu::Canvas::RenderQuad(const glm::vec2 p0, const glm::vec2 p1, const glm::vec2 p2, const glm::vec2 p3) const
 {
 	wgpu::Vertex3D v0{};
 	v0.position = glm::vec3{ p0, m_DrawLayer };

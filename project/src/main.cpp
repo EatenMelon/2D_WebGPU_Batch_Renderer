@@ -76,6 +76,9 @@ int main()
 			canvas.SetDrawColor(violet);
 			canvas.DrawLine(glm::vec2{ -0.25f, -0.25f }, glm::vec2{ 0.25f, 0.25f });
 			canvas.DrawLine(glm::vec2{ -0.25f, 0.25f }, glm::vec2{ 0.25f, -0.25f });
+
+			canvas.SetDrawLayer(3.f);
+			canvas.FillEllipse(0, 0, 0.125f / 2, 0.125f);
 		}
 		canvas.EndFrame();
 	}
