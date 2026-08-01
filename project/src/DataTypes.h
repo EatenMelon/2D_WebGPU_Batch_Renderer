@@ -7,7 +7,8 @@ namespace wgpu
 {
 	struct ColorF
 	{
-		ColorF(float r = 0.f, float g = 0.f, float b = 0.f, float a = 1.f);
+		ColorF() = default;
+		ColorF(float r, float g, float b, float a = 1.f);
 
 		float r{ 0.f };
 		float g{ 0.f };
@@ -17,10 +18,12 @@ namespace wgpu
 
 	struct RectF
 	{
+		RectF() = default;
+		RectF(float left, float bottom, float width, float height);
 		RectF(const glm::vec2& pos, const glm::vec2& size);
 		RectF(const glm::vec2& pos, float size);
 
-		glm::vec2 position{};
+		glm::vec2 pos{};
 		glm::vec2 size{};
 	};
 

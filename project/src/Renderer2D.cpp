@@ -41,9 +41,16 @@ void wgpu::Renderer2D::BeginFrame()
 	wgpuCommandEncoderRelease(encoder);
 }
 
-void wgpu::Renderer2D::Submit(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2)
+void wgpu::Renderer2D::SubmitTriangle(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2)
 {
 	m_RenderQueue->PushTriangle(mat, v0, v1, v2);
+}
+
+void wgpu::Renderer2D::SubmitQuad(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2, const Vertex3D& v3)
+{
+	m_RenderQueue->PushTriangle(mat, v0, v1, v2);
+	m_RenderQueue->PushTriangle(mat, v2, v3, v0);
+
 }
 
 void wgpu::Renderer2D::EndFrame()
@@ -132,9 +139,9 @@ void wgpu::Renderer2D::Render() const
 	wgpuTextureViewRelease(targetView);
 }
 
-void wgpu::Renderer2D::SetClearColor(float r, float g, float b, float a)
+void wgpu::Renderer2D::SetClearColor(const ColorF& color)
 {
-	m_ClearColor = ColorF(r, g, b, a);
+	m_ClearColor = color;
 }
 
 void wgpu::Renderer2D::SetCamera(const std::shared_ptr<Camera2D>& camera)

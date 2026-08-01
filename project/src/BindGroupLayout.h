@@ -18,7 +18,7 @@ namespace wgpu
 		None
 	};
 
-	class BindGroupLayout
+	class BindGroupLayout final
 	{
 	public:
 

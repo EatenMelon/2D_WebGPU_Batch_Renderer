@@ -15,6 +15,12 @@ namespace wgpu
 	{
 	public:
 		Material(const Pipeline& pipeline);
+		~Material() noexcept;
+
+		Material(const Material&) = delete;
+		Material& operator=(const Material&) = delete;
+		Material(Material&&) = delete;
+		Material& operator=(Material&&) = delete;
 
 		template<typename T>
 		bool SetUniform(int binding, T value);
@@ -71,6 +77,11 @@ namespace wgpu
 	inline int Material::GetUniformBinding()
 	{
 		auto layout = m_Pipeline->GetBindGroupLayout();
+
+		if (layout == nullptr)
+		{
+			return -1;
+		}
 
 		return layout->GetUniformEntryBinding<T>();
 	}

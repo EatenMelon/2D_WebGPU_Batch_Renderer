@@ -20,6 +20,12 @@ wgpu::Material::Material(const Pipeline& pipeline)
     m_UniformBuffer = wgpuDeviceCreateBuffer(m_Pipeline->GetGraphicsContext()->GetDevice(), &bufferDesc);
 }
 
+wgpu::Material::~Material() noexcept
+{
+	wgpuBufferRelease(m_UniformBuffer);
+	wgpuBindGroupRelease(m_BindGroup);
+}
+
 bool wgpu::Material::SetTexture(int binding, const Texture2D* texture)
 {
 	if (texture == nullptr) return false;

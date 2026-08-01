@@ -26,11 +26,12 @@ namespace wgpu
 		Renderer2D& operator=(Renderer2D&&) = delete;
 
 		void BeginFrame();
-		void Submit(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2);
+		void SubmitTriangle(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2);
+		void SubmitQuad(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2, const Vertex3D& v3);
 		void EndFrame();
 		void Render() const;
 
-		void SetClearColor(float r, float g, float b, float a = 1.f);
+		void SetClearColor(const ColorF& color);
 		void SetCamera(const std::shared_ptr<Camera2D>& camera);
 		void Resize();
 
