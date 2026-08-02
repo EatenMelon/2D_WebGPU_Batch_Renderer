@@ -119,7 +119,7 @@ wgpu::Pipeline::Pipeline(const Shader& shader, const BindGroupLayout* bindGroupL
 	WGPUDepthStencilState depthStencilState{};
 	SetDefault(depthStencilState);
 
-	depthStencilState.depthCompare = WGPUCompareFunction_Less;
+	depthStencilState.depthCompare = WGPUCompareFunction_LessEqual;
 	depthStencilState.depthWriteEnabled = WGPUOptionalBool_True;
 
 	WGPUTextureFormat depthTextureFormat = wgpuTextureGetFormat(renderer->GetDepthTexture());

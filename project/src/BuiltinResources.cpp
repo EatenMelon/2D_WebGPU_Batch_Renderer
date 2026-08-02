@@ -76,7 +76,7 @@ const std::string_view wgpu::BuiltinResources::m_TextureSource
 	"fn fs_main(in: VertexOutput) -> @location(0) vec4f\n"
 	"{\n"
 	"	let color = textureSample(texture, textureSampler, in.uv);\n"
-	"	let linearColor = pow(color, vec4f(2.2));\n"
+	"	let linearColor = vec4f(pow(color.rgb, vec3f(2.2)), color.a);\n"
 	"	return linearColor * in.color;\n"
 	"}\n"
 };

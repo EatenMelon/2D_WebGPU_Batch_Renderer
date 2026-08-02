@@ -188,7 +188,7 @@ void wgpu::Canvas::DrawEllipse(float x, float y, float xRadius, float yRadius, f
 
 void wgpu::Canvas::DrawEllipse(const EllipseF & ellipse, float lineWidth) const
 {
-	DrawEllipse(ellipse.center.x, ellipse.center.x, ellipse.radii.x, ellipse.radii.y, lineWidth);
+	DrawEllipse(ellipse.center.x, ellipse.center.y, ellipse.radii.x, ellipse.radii.y, lineWidth);
 }
 
 void wgpu::Canvas::DrawTexture(const Texture2D& texture, const RectF& dst) const
