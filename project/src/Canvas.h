@@ -43,6 +43,8 @@ namespace wgpu
 
 		void FillEllipse(float x, float y, float xRadius, float yRadius) const;
 		void FillEllipse(const EllipseF& ellipse) const;
+		void DrawEllipse(float x, float y, float xRadius, float yRadius, float lineWidth = 0.01f) const;
+		void DrawEllipse(const EllipseF& ellipse, float lineWidth = 0.01f) const;
 
 		void DrawTexture(const Texture2D& texture, const RectF& dst) const;
 		void DrawTexture(const Texture2D& texture, const RectF& dst, const RectF& src) const;
@@ -59,6 +61,8 @@ namespace wgpu
 	private:
 		void RenderQuad(Material* mat, const glm::vec2& p0, const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3) const;
 		void RenderQuad(Material* mat, const Vertex2D& p0, const Vertex2D& p1, const Vertex2D& p2, const Vertex2D& p3) const;
+
+		glm::vec2 GetPointOnEllipse(float angle, const glm::vec2& pos, const glm::vec2& radii) const;
 
 		ColorF m_DrawColor{ 1.f, 1.f, 1.f, 1.f };
 		float m_DrawLayer{ 0.f };

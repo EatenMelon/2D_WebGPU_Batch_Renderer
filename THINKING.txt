@@ -94,4 +94,5 @@ Since i'm batching anyways, i can make a new vertex buffer before it ends up ove
 
 So i'll have to be more carefull while iterating over batches in the renderQueue.
 
+(the renderqueue can handle about 6'720'048 vertices atm, so it should be fine for now)
 famous last words: "I'll fix it later!"

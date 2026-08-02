@@ -16,7 +16,6 @@ int main()
 
 	wgpu::Canvas canvas{ window };
 	wgpu::Texture2D texture{ canvas, "resources/texture.png" };
-	texture.SetColorMultiplier(wgpu::ColorF(1.f, 0.f, 1.f));
 	texture.SelectSampler(wgpu::Sampler::Preset::Linear);
 
 	auto camera{ std::make_shared<wgpu::Camera2D>() };
@@ -81,8 +80,13 @@ int main()
 			canvas.DrawLine(glm::vec2{ -0.25f, 0.25f }, glm::vec2{ 0.25f, -0.25f });
 
 			canvas.SetDrawLayer(3.f);
-			canvas.FillEllipse(-0.5f, 0, 0.125f / 2, 0.125f);
+			canvas.FillEllipse(0, 0, 0.125f / 1.5f, 0.125f / 2.5f);
 
+			canvas.SetDrawLayer(4.f);
+			canvas.SetDrawColor(green);
+			canvas.DrawEllipse(0, 0, 0.125f / 1.5f, 0.125f / 2.5f, 0.005f);
+
+			canvas.SetDrawLayer(3.f);
 			canvas.DrawTexture
 			(
 				texture,

@@ -106,21 +106,15 @@ void wgpu::Canvas::DrawRect(const RectF & rect, float lineWidth) const
 
 void wgpu::Canvas::FillEllipse(float x, float y, float xRadius, float yRadius) const
 {
-	auto getPoint = [&](float angle) -> glm::vec2
-		{
-			return glm::vec2
-			{
-				x + xRadius * cosf(angle),
-				y + yRadius * sinf(angle)
-			};
-		};
-
 	auto draw = [&](float angleA, float angleB) -> void
 		{
-			auto p0 = getPoint(angleA);
-			auto p1 = getPoint(glm::pi<float>() - angleA);
-			auto p2 = getPoint(glm::pi<float>() - angleB);
-			auto p3 = getPoint(angleB);
+			glm::vec2 pos{ x, y };
+			glm::vec2 radii{ xRadius, yRadius };
+
+			auto p0 = GetPointOnEllipse(angleA, pos, radii);
+			auto p1 = GetPointOnEllipse(glm::pi<float>() - angleA, pos, radii);
+			auto p2 = GetPointOnEllipse(glm::pi<float>() - angleB, pos, radii);
+			auto p3 = GetPointOnEllipse(angleB, pos, radii);
 
 			auto material = m_Renderer->GetBuiltinResources()->GetSolidColorMaterial();
 			RenderQuad(material, p0, p1, p2, p3);
@@ -146,6 +140,55 @@ void wgpu::Canvas::FillEllipse(float x, float y, float xRadius, float yRadius) c
 void wgpu::Canvas::FillEllipse(const EllipseF& ellipse) const
 {
 	FillEllipse(ellipse.center.x, ellipse.center.y, ellipse.radii.x, ellipse.radii.y);
+}
+
+void wgpu::Canvas::DrawEllipse(float x, float y, float xRadius, float yRadius, float lineWidth) const
+{
+	const glm::vec2 innerRadii{ xRadius - lineWidth / 2.f, yRadius - lineWidth / 2.f };
+	const glm::vec2 outerRadii{ xRadius + lineWidth / 2.f, yRadius + lineWidth / 2.f };
+
+	auto draw = [&](float angleA, float angleB) -> void
+		{
+			glm::vec2 pos{ x, y };
+
+			auto material = m_Renderer->GetBuiltinResources()->GetSolidColorMaterial();
+
+			auto p00 = GetPointOnEllipse(angleA, pos, outerRadii);
+			auto p01 = GetPointOnEllipse(angleA, pos, innerRadii);
+			auto p02 = GetPointOnEllipse(angleB, pos, innerRadii);
+			auto p03 = GetPointOnEllipse(angleB, pos, outerRadii);
+			RenderQuad(material, p00, p01, p02, p03);
+
+			auto p10 = GetPointOnEllipse(glm::pi<float>() - angleA, pos, outerRadii);
+			auto p11 = GetPointOnEllipse(glm::pi<float>() - angleB, pos, outerRadii);
+			auto p12 = GetPointOnEllipse(glm::pi<float>() - angleB, pos, innerRadii);
+			auto p13 = GetPointOnEllipse(glm::pi<float>() - angleA, pos, innerRadii);
+			RenderQuad(material, p10, p11, p12, p13);
+		};
+
+	const float zoom{ GetCamera()->GetZoom() };
+
+	constexpr float quarter{ glm::pi<float>() / 2.f };
+	constexpr float minIncr{ quarter / 15.f };
+	constexpr float maxIncr{ quarter / 2.f };
+
+	const float increment{ glm::clamp(zoom / 5.f, minIncr, maxIncr) };
+	int segments = static_cast<int>(std::ceil(quarter / increment));
+
+	// an ellipse draws at least 24 triangles (72 vertices), and at most 120 triangles (360 vertices)
+	for (int i = 1; i <= segments; i++)
+	{
+		float angleA = std::min(i * increment, quarter);
+		float angleB = (i - 1) * increment;
+
+		draw(angleA, angleB);
+		draw(-angleB, -angleA);
+	}
+}
+
+void wgpu::Canvas::DrawEllipse(const EllipseF & ellipse, float lineWidth) const
+{
+	DrawEllipse(ellipse.center.x, ellipse.center.x, ellipse.radii.x, ellipse.radii.y, lineWidth);
 }
 
 void wgpu::Canvas::DrawTexture(const Texture2D& texture, const RectF& dst) const
@@ -258,4 +301,13 @@ void wgpu::Canvas::RenderQuad(Material* mat, const Vertex2D& p0, const Vertex2D&
 	v3.uv = p3.uv;
 
 	m_Renderer->SubmitQuad(*mat, v0, v1, v2, v3);
+}
+
+glm::vec2 wgpu::Canvas::GetPointOnEllipse(float angle, const glm::vec2& pos, const glm::vec2& radii) const
+{
+	return glm::vec2
+	{
+		pos.x + radii.x * cosf(angle),
+		pos.y + radii.y * sinf(angle)
+	};
 }
