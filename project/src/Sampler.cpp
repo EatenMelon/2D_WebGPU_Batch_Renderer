@@ -44,7 +44,7 @@ wgpu::Sampler::SamplerSettings wgpu::Sampler::GetSettings(Preset preset)
 
 	switch (preset)
 	{
-	case wgpu::Sampler::Preset::PixelArt:
+	case wgpu::Sampler::Preset::Nearest:
 		settings.magFilter = FilterMode::Nearest;
 		settings.minFilter = FilterMode::Nearest;
 		break;

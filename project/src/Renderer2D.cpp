@@ -2,6 +2,7 @@
 
 #include "GraphicsContext.h"
 #include "RenderQueue.h"
+#include "BuiltinResources.h"
 
 #include <iostream>
 
@@ -14,6 +15,8 @@ wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 	CreateVertexBuffer(100 * sizeof(Vertex3D));
 
 	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
+
+	m_BuiltinResources = std::make_unique<BuiltinResources>(*this);
 }
 
 wgpu::Renderer2D::~Renderer2D() noexcept

@@ -11,7 +11,7 @@ namespace wgpu
 	class Sampler final
 	{
 	public:
-		enum class Preset { PixelArt, Smooth };
+		enum class Preset { Nearest, Linear };
 
 		Sampler(const GraphicsContext& context, Preset preset);
 		Sampler(const GraphicsContext& context, AddressMode u, AddressMode v, FilterMode mag, FilterMode min);

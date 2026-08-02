@@ -22,8 +22,15 @@ wgpu::Material::Material(const Pipeline& pipeline)
 
 wgpu::Material::~Material() noexcept
 {
-	wgpuBufferRelease(m_UniformBuffer);
-	wgpuBindGroupRelease(m_BindGroup);
+	if(m_BindGroup != nullptr)
+	{
+		wgpuBindGroupRelease(m_BindGroup);
+	}
+
+	if(m_UniformBuffer != nullptr)
+	{
+		wgpuBufferRelease(m_UniformBuffer);
+	}
 }
 
 bool wgpu::Material::SetTexture(int binding, const Texture2D* texture)

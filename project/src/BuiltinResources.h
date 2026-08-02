@@ -12,6 +12,7 @@ namespace wgpu
 	class BindGroupLayout;
 	class Pipeline;
 	class Material;
+	class Sampler;
 
 	class BuiltinResources final
 	{
@@ -24,9 +25,11 @@ namespace wgpu
 		BuiltinResources(BuiltinResources&&) = delete;
 		BuiltinResources& operator=(BuiltinResources&&) = delete;
 
-		enum class Type { SolidColor, Texture };
+		Material* GetSolidColorMaterial() const;
+		std::unique_ptr<Material> CreateTextureMaterial() const;
 
-		Material* GetMaterial(Type resourceType) const;
+		Sampler* GetNearestSampler() const;
+		Sampler* GetLinearSampler() const;
 
 	private:
 		const Renderer2D* m_Renderer{ nullptr };
@@ -36,7 +39,15 @@ namespace wgpu
 		std::unique_ptr<Pipeline> m_SolidColorPipeline{ nullptr };
 		std::unique_ptr<Material> m_SolidColorMaterial{ nullptr };
 
+		std::unique_ptr<Shader> m_TextureShader{ nullptr };
+		std::unique_ptr<BindGroupLayout> m_TextureLayout{ nullptr };
+		std::unique_ptr<Pipeline> m_TexturePipeline{ nullptr };
+
+		std::unique_ptr<Sampler> m_NearestSampler{ nullptr };
+		std::unique_ptr<Sampler> m_LinearSampler{ nullptr };
+
 		static const std::string_view m_SolidColorSource;
+		static const std::string_view m_TextureSource;
 	};
 }
 

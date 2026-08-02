@@ -4,6 +4,7 @@
 #include "BindGroupLayout.h"
 #include "Pipeline.h"
 #include "Material.h"
+#include "Sampler.h"
 
 const std::string_view wgpu::BuiltinResources::m_SolidColorSource
 {
@@ -40,10 +41,50 @@ const std::string_view wgpu::BuiltinResources::m_SolidColorSource
 	"}\n"
 };
 
+const std::string_view wgpu::BuiltinResources::m_TextureSource
+{
+	"struct VertexInput\n"
+	"{\n"
+	"	@location(0) position: vec3f,\n"
+	"	@location(1) color: vec4f,\n"
+	"	@location(2) uv: vec2f,\n"
+	"};\n"
+	"struct VertexOutput\n"
+	"{\n"
+	"	@builtin(position) position: vec4f,\n"
+	"	@location(0) color: vec4f,\n"
+	"	@location(1) uv: vec2f,\n"
+	"}\n"
+	"struct CameraData\n"
+	"{\n"
+	"	proj: mat4x4<f32>,\n"
+	"	view : mat4x4<f32>\n"
+	"}\n"
+	"@group(0) @binding(0) var<uniform> camera: CameraData;\n"
+	"@group(0) @binding(1) var texture : texture_2d<f32>;\n"
+	"@group(0) @binding(2) var textureSampler : sampler;\n"
+	"@vertex\n"
+	"fn vs_main(in: VertexInput) -> VertexOutput\n"
+	"{\n"
+	"	var out : VertexOutput;\n"
+	"	out.position = camera.proj * camera.view * vec4f(in.position, 1.0);\n"
+	"	out.color = in.color;\n"
+	"	out.uv = in.uv;\n"
+	"	return out;\n"
+	"}\n"
+	"@fragment\n"
+	"fn fs_main(in: VertexOutput) -> @location(0) vec4f\n"
+	"{\n"
+	"	let color = textureSample(texture, textureSampler, in.uv);\n"
+	"	let linearColor = pow(color, vec4f(2.2));\n"
+	"	return linearColor * in.color;\n"
+	"}\n"
+};
+
 wgpu::BuiltinResources::BuiltinResources(const Renderer2D& renderer)
 	: m_Renderer{ &renderer }
 {
-	// resources need for solid color rendering for shapes
+	// resources needed for solid color rendering for shapes
 	m_SolidColorShader = std::make_unique<Shader>(*m_Renderer, m_SolidColorSource.data(), Shader::ParsingMethod::FromString);
 
 	m_SolidColorLayout = std::make_unique<BindGroupLayout>();
@@ -52,23 +93,41 @@ wgpu::BuiltinResources::BuiltinResources(const Renderer2D& renderer)
 
 	m_SolidColorPipeline = std::make_unique<Pipeline>(*m_SolidColorShader.get(), m_SolidColorLayout.get());
 	m_SolidColorMaterial = std::make_unique<Material>(*m_SolidColorPipeline.get());
+
+	// resources needed for basic texture rendering
+	m_TextureShader = std::make_unique<Shader>(*m_Renderer, m_TextureSource.data(), Shader::ParsingMethod::FromString);
+
+	m_TextureLayout = std::make_unique<BindGroupLayout>();
+	m_TextureLayout->AddUniformEntry<CameraData>(0, BindingVisibility::VertexShaderStage);
+	m_TextureLayout->AddTextureEntry(1);
+	m_TextureLayout->AddSamplerEntry(2);
+	m_TextureLayout->ConfirmLayout(*m_Renderer->GetContext());
+
+	m_TexturePipeline = std::make_unique<Pipeline>(*m_TextureShader.get(), m_TextureLayout.get());
+
+	// samplers
+	m_NearestSampler = std::make_unique<Sampler>(*m_Renderer->GetContext(), Sampler::Preset::Nearest);
+	m_LinearSampler = std::make_unique<Sampler>(*m_Renderer->GetContext(), Sampler::Preset::Linear);
 }
 
 wgpu::BuiltinResources::~BuiltinResources() noexcept = default;
 
-wgpu::Material* wgpu::BuiltinResources::GetMaterial(Type resourceType) const
+wgpu::Material* wgpu::BuiltinResources::GetSolidColorMaterial() const
 {
-	switch (resourceType)
-	{
-	case wgpu::BuiltinResources::Type::SolidColor:
-		return m_SolidColorMaterial.get();
+	return m_SolidColorMaterial.get();
+}
 
-	case wgpu::BuiltinResources::Type::Texture:
-		break;
+std::unique_ptr<wgpu::Material> wgpu::BuiltinResources::CreateTextureMaterial() const
+{
+	return std::make_unique<Material>(*m_TexturePipeline.get());
+}
 
-	default:
-		break;
-	}
+wgpu::Sampler* wgpu::BuiltinResources::GetNearestSampler() const
+{
+	return m_NearestSampler.get();
+}
 
-	return nullptr;
+wgpu::Sampler* wgpu::BuiltinResources::GetLinearSampler() const
+{
+	return m_LinearSampler.get();
 }

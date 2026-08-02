@@ -13,6 +13,8 @@ namespace wgpu
 	class Renderer2D;
 	class Camera2D;
 	class BuiltinResources;
+	class Material;
+	class Texture2D;
 
 	class Canvas final
 	{
@@ -42,6 +44,9 @@ namespace wgpu
 		void FillEllipse(float x, float y, float xRadius, float yRadius) const;
 		void FillEllipse(const EllipseF& ellipse) const;
 
+		void DrawTexture(const Texture2D& texture, const RectF& dst) const;
+		void DrawTexture(const Texture2D& texture, const RectF& dst, const RectF& src) const;
+
 		void SetDrawColor(const ColorF& color);
 		void SetDrawLayer(float layer);
 
@@ -49,15 +54,16 @@ namespace wgpu
 		float GetDrawLayer() const;
 
 		std::shared_ptr<Camera2D> GetCamera() const;
+		Renderer2D* GetRenderer() const;
 
 	private:
-		void RenderQuad(const glm::vec2 p0, const glm::vec2 p1, const glm::vec2 p2, const glm::vec2 p3) const;
+		void RenderQuad(Material* mat, const glm::vec2& p0, const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3) const;
+		void RenderQuad(Material* mat, const Vertex2D& p0, const Vertex2D& p1, const Vertex2D& p2, const Vertex2D& p3) const;
 
 		ColorF m_DrawColor{ 1.f, 1.f, 1.f, 1.f };
 		float m_DrawLayer{ 0.f };
 
 		std::unique_ptr<Renderer2D> m_Renderer{ nullptr };
-		std::unique_ptr<BuiltinResources> m_BuiltinResources{ nullptr };
 
 		static const std::string m_SolidColorShaderSource;
 	};

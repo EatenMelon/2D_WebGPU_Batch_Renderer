@@ -14,6 +14,8 @@ namespace wgpu
 	class RenderQueue;
 	class GraphicsContext;
 	class Material;
+	class BuiltinResources;
+
 	class Renderer2D final
 	{
 	public:
@@ -41,13 +43,14 @@ namespace wgpu
 		WGPUTexture GetDepthTexture() const { return m_DepthTexture; }
 
 		const GraphicsContext* GetContext() const { return m_Context.get(); }
+		const BuiltinResources* GetBuiltinResources() const { return m_BuiltinResources.get(); }
 
 	private:
 		ColorF m_ClearColor{ 0.f, 0.f, 0.f, 1.f };
 		std::shared_ptr<Camera2D> m_Camera{ nullptr };
+		std::unique_ptr<BuiltinResources> m_BuiltinResources{ nullptr };
 
 		std::pair<WGPUSurfaceTexture, WGPUTextureView> GetNextSurfaceViewData() const;
-
 		void CreateVertexBuffer(size_t capacity);
 		void InitDepthBuffer();
 		void ReleaseDepthBuffer();
