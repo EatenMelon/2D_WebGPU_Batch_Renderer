@@ -42,8 +42,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 set(SDL3_DIR "${LIB_DIR}/SDL3/cmake")
 set(SDL3_image_DIR "${LIB_DIR}/SDL3_image/cmake")
 
-find_package(SDL3 REQUIRED)
-find_package(SDL3_image REQUIRED)
+find_package(SDL3 REQUIRED GLOBAL)
+find_package(SDL3_image REQUIRED GLOBAL)
 
 # subdirectories
 add_subdirectory("${LIB_DIR}/webgpu")
