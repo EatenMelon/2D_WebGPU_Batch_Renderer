@@ -68,12 +68,12 @@ function(${PROJECT_NAME}_Copy_Dependencies TARGET)
 	# copy dll's next to library
 	target_copy_webgpu_binaries(${TARGET})
 
-	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	add_custom_command(TARGET ${TARGET} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"$<TARGET_FILE:SDL3::SDL3>"
 		"$<TARGET_FILE_DIR:${TARGET}>"
 	)
-	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	add_custom_command(TARGET ${TARGET} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different
 		"$<TARGET_FILE:SDL3_image::SDL3_image>"
 		"$<TARGET_FILE_DIR:${TARGET}>"
