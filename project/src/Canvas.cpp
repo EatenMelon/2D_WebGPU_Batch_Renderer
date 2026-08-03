@@ -1,11 +1,11 @@
-#include "Canvas.h"
+#include <Canvas.h>
 
 #include <vector>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Renderer2D.h"
+#include <Renderer2D.h>
 #include "BuiltinResources.h"
-#include "Texture2D.h"
+#include <Texture2D.h>
 
 wgpu::Canvas::Canvas(SDL_Window* window)
 	: m_Renderer{ std::make_unique<Renderer2D>(window) }
@@ -124,11 +124,10 @@ void wgpu::Canvas::FillEllipse(float x, float y, float xRadius, float yRadius) c
 
 	constexpr float quarter{ glm::pi<float>() / 2 };
 	constexpr float minIncr{ quarter / 15.f };
-	constexpr float maxIncr{ quarter / 2.f };
+	constexpr float maxIncr{ quarter / 5.f };
 
 	const float increment{ glm::clamp(zoom / 5.f, minIncr, maxIncr) };
 
-	// an ellipse draws at least 4 triangles (12 vertices), and at most 56 triangles (168 vertices)
 	for (float angle{ increment }; angle < quarter; angle += increment)
 	{
 		const float prevAngle{ angle - increment };
@@ -170,12 +169,11 @@ void wgpu::Canvas::DrawEllipse(float x, float y, float xRadius, float yRadius, f
 
 	constexpr float quarter{ glm::pi<float>() / 2.f };
 	constexpr float minIncr{ quarter / 15.f };
-	constexpr float maxIncr{ quarter / 2.f };
+	constexpr float maxIncr{ quarter / 5.f };
 
 	const float increment{ glm::clamp(zoom / 5.f, minIncr, maxIncr) };
 	int segments = static_cast<int>(std::ceil(quarter / increment));
 
-	// an ellipse draws at least 24 triangles (72 vertices), and at most 120 triangles (360 vertices)
 	for (int i = 1; i <= segments; i++)
 	{
 		float angleA = std::min(i * increment, quarter);

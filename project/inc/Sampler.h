@@ -1,10 +1,12 @@
 #ifndef _SAMPLER
 #define _SAMPLER
 
-#include "GraphicsContext.h"
+#include <webgpu/webgpu.h>
 
 namespace wgpu
 {
+	class GraphicsContext;
+
 	enum class AddressMode { Repeat, MirrorRepeat, Clamp };
 	enum class FilterMode { Linear, Nearest };
 

@@ -11,8 +11,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
 set(SRC_DIR "project/src")
-add_executable(${PROJECT_NAME}
-	"${SRC_DIR}/main.cpp"
+
+add_library(${PROJECT_NAME} STATIC
 	"${SRC_DIR}/Renderer2D.cpp"
 	"${SRC_DIR}/GraphicsContext.cpp"
 	"${SRC_DIR}/Shader.cpp"
@@ -30,10 +30,12 @@ add_executable(${PROJECT_NAME}
 
 # include directories
 set(LIB_DIR "project/lib")
+set(INC_DIR "project/inc")
 
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(${PROJECT_NAME} PUBLIC
 	"${LIB_DIR}/glm"
 	"${LIB_DIR}/webgpu/include"
+	"${INC_DIR}"
 )
 
 # link libraries
@@ -47,7 +49,7 @@ find_package(SDL3_image REQUIRED)
 add_subdirectory("${LIB_DIR}/webgpu")
 add_subdirectory("${LIB_DIR}/sdl3webgpu")
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
+target_link_libraries(${PROJECT_NAME} PUBLIC
 	webgpu
 	SDL3::SDL3
 	SDL3_image::SDL3_image
@@ -55,27 +57,45 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 # set warning level to 4 and make warnings cause errors
-target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
+if (MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
 
-# copy dll's next to executable
-target_copy_webgpu_binaries(${PROJECT_NAME})
+function(${PROJECT_NAME}_Copy_Dependencies TARGET)
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "$<TARGET_FILE:SDL3::SDL3>"
-	"$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+	# copy dll's next to library
+	target_copy_webgpu_binaries(${TARGET})
+
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+		"$<TARGET_FILE:SDL3::SDL3>"
+		"$<TARGET_FILE_DIR:${TARGET}>"
+	)
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+		"$<TARGET_FILE:SDL3_image::SDL3_image>"
+		"$<TARGET_FILE_DIR:${TARGET}>"
+	)
+
+	message("Copied ${PROJECT_NAME}'s dependencies next to ${TARGET}")
+
+endfunction()
+
+add_executable(example "examples/main.cpp")
+
+target_link_libraries(example PRIVATE 
+	${PROJECT_NAME}
+	SDL3::SDL3
 )
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "$<TARGET_FILE:SDL3_image::SDL3_image>"
-	"$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-)
+Renderer2D_Copy_Dependencies(example)
 
 # copy resources
 add_custom_command(
-	TARGET ${PROJECT_NAME} POST_BUILD
+	TARGET example POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
 	"${CMAKE_SOURCE_DIR}/resources"
-	"$<TARGET_FILE_DIR:${PROJECT_NAME}>/resources"
+	"$<TARGET_FILE_DIR:example>/resources"
 )

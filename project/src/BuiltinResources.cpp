@@ -1,10 +1,10 @@
 #include "BuiltinResources.h"
 
-#include "Shader.h"
+#include <Shader.h>
 #include "BindGroupLayout.h"
-#include "Pipeline.h"
-#include "Material.h"
-#include "Sampler.h"
+#include <Pipeline.h>
+#include <Material.h>
+#include <Sampler.h>
 
 const std::string_view wgpu::BuiltinResources::m_SolidColorSource
 {

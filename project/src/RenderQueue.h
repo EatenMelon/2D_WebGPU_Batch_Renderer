@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "DataTypes.h"
+#include <DataTypes.h>
 #include "GraphicsContext.h"
 
 namespace wgpu

@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <memory>
 
-#include <wgpu.h>
+#include <webgpu/webgpu.h>
 #include "DataTypes.h"
 #include "Sampler.h"
 

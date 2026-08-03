@@ -1,4 +1,5 @@
-#include "Sampler.h"
+#include <Sampler.h>
+#include "GraphicsContext.h"
 
 wgpu::Sampler::Sampler(const GraphicsContext& context, Preset preset)
 	: Sampler(context, GetSettings(preset))

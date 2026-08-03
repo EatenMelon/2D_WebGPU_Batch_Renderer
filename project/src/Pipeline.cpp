@@ -1,5 +1,5 @@
-#include "Pipeline.h"
-#include "DataTypes.h"
+#include <Pipeline.h>
+#include <DataTypes.h>
 
 static void SetDefault(WGPUStencilFaceState& stencilFaceState)
 {

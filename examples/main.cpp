@@ -10,7 +10,7 @@
 int main()
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-
+	
 	glm::ivec2 size{ 800, 600 };
 	SDL_Window* window = SDL_CreateWindow("Hello WebGPU", size.x, size.y, SDL_WINDOW_RESIZABLE);
 
@@ -76,7 +76,6 @@ int main()
 			
 			const glm::vec2 start{ -0.5f, -0.33f };
 			const glm::vec2 end{ 0.5f, -0.33f };
-
 			canvas.SetDrawColor(green);
 			canvas.DrawLine(start, end, lineWidth);
 			canvas.DrawLine(-start, -end, lineWidth);
