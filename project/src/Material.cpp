@@ -1,6 +1,8 @@
 #include <Material.h>
+
 #include "Texture2D.h"
 #include "Sampler.h"
+#include "GraphicsContext.h"
 
 wgpu::Material::Material(const Pipeline& pipeline)
 	: m_Pipeline{ &pipeline }

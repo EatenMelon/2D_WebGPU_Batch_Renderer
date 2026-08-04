@@ -6,10 +6,12 @@
 #include <optional>
 #include <typeindex>
 
-#include "GraphicsContext.h"
+#include <wgpu.h>
 
 namespace wgpu
 {
+	class GraphicsContext;
+
 	enum class BindingVisibility
 	{
 		VertexShaderStage,

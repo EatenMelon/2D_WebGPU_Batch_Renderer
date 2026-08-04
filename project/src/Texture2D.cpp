@@ -71,7 +71,7 @@ wgpu::Texture2D::Texture2D(const Renderer2D& renderer, const std::filesystem::pa
 	m_TextureView = wgpuTextureCreateView(m_Texture, nullptr);
 	SDL_DestroySurface(surface);
 
-	m_Material = std::move(m_Renderer->GetBuiltinResources()->CreateTextureMaterial());
+	m_Material = m_Renderer->GetBuiltinResources()->CreateTextureMaterial();
 	m_Material->SetTexture(1, this);
 	m_Material->SetSampler(2, m_Renderer->GetBuiltinResources()->GetLinearSampler());
 }
@@ -80,7 +80,7 @@ wgpu::Texture2D::Texture2D(const Canvas& canvas, const std::filesystem::path& pa
 	: Texture2D(*canvas.GetRenderer(), path)
 {}
 
-wgpu::Texture2D::~Texture2D()
+wgpu::Texture2D::~Texture2D() noexcept
 {
 	m_Material.reset();
 

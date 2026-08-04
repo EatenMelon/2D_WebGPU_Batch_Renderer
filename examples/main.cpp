@@ -47,8 +47,6 @@ int main()
 				glm::vec2 motion{ -event.motion.xrel, event.motion.yrel };
 				camera->Move(motion / 1000.f * camera->GetZoom());
 				break;
-
-			default: break;
 			}
 		}
 

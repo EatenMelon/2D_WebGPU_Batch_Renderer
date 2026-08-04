@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include "GraphicsContext.h"
+
 bool wgpu::BindGroupLayout::AddTextureEntry(int binding)
 {
 	if (IsLocked()) return false;

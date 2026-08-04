@@ -1,6 +1,8 @@
 #include <Pipeline.h>
 #include <DataTypes.h>
 
+#include "GraphicsContext.h"
+
 static void SetDefault(WGPUStencilFaceState& stencilFaceState)
 {
 	stencilFaceState.compare = WGPUCompareFunction_Always;

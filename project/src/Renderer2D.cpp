@@ -7,9 +7,9 @@
 #include <iostream>
 
 wgpu::Renderer2D::Renderer2D(SDL_Window* window)
-	: m_Context{ std::make_unique<GraphicsContext>(window) }
+	: m_Camera{ std::make_shared<wgpu::Camera2D>() }
+	, m_Context{ std::make_unique<GraphicsContext>(window) }
 	, m_RenderQueue{ std::make_unique<RenderQueue>() }
-	, m_Camera{ std::make_shared<wgpu::Camera2D>() }
 {
 	InitDepthBuffer();
 	CreateVertexBuffer(100 * sizeof(Vertex3D));
