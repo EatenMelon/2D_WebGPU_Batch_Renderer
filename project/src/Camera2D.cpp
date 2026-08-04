@@ -31,13 +31,13 @@ void wgpu::Camera2D::Zoom(float deltaZoom)
 	SetZoom(m_Zoom + deltaZoom);
 }
 
-void wgpu::Camera2D::Focus(glm::vec2 focalPoint)
+void wgpu::Camera2D::Focus(const glm::vec2& focalPoint)
 {
 	m_FocalPoint = focalPoint;
 	m_UpdateCameraData = true;
 }
 
-void wgpu::Camera2D::Move(glm::vec2 deltaPos)
+void wgpu::Camera2D::Move(const glm::vec2& deltaPos)
 {
 	m_FocalPoint += deltaPos;
 	m_UpdateCameraData = true;

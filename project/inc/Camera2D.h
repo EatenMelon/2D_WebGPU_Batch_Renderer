@@ -8,14 +8,13 @@ namespace wgpu
 	class Camera2D final
 	{
 	public:
-		
 		void SetAspectRatio(float aspectRatio);
 
 		void SetZoom(float zoom);
 		void Zoom(float deltaZoom);
 
-		void Focus(glm::vec2 focalPoint);
-		void Move(glm::vec2 deltaPos);
+		void Focus(const glm::vec2& focalPoint);
+		void Move(const glm::vec2& deltaPos);
 
 		const CameraData& GetCameraData();
 		float GetAspectRatio() const { return m_AspectRatio; }
