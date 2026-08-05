@@ -38,6 +38,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	"${INC_DIR}"
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+
 # link libraries
 set(SDL3_DIR "${LIB_DIR}/SDL3/cmake")
 set(SDL3_image_DIR "${LIB_DIR}/SDL3_image/cmake")
