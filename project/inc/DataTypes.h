@@ -29,6 +29,7 @@ namespace wgpu
 
 	struct EllipseF
 	{
+		EllipseF() = default;
 		EllipseF(float x, float y, float xRadius, float yRadius);
 		EllipseF(const glm::vec2& center, const glm::vec2& radii);
 		EllipseF(const glm::vec2& center, float radius);
