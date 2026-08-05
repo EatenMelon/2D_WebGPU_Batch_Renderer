@@ -3,23 +3,15 @@
 #include <stdexcept>
 #include "Material.h"
 
+const size_t wgpu::RenderQueue::m_InitialBatchSize{ 512 };
+
 void wgpu::RenderQueue::PushTriangle(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2)
 {
-	if (m_Batches.contains(&mat))
+	auto [itr, inserted] = m_Batches.try_emplace(&mat, std::vector<Vertex3D>());
+
+	if (inserted)
 	{
-		auto itr = m_Batches.find(&mat);
-
-		itr->second.push_back(v0);
-		itr->second.push_back(v1);
-		itr->second.push_back(v2);
-		return;
-	}
-
-	auto [itr, inserted] = m_Batches.emplace(&mat, std::vector<Vertex3D>());
-
-	if (!inserted)
-	{
-		throw std::runtime_error("Failed to create new batch!");
+		itr->second.reserve(m_InitialBatchSize);
 	}
 
 	itr->second.push_back(v0);
@@ -38,6 +30,7 @@ void wgpu::RenderQueue::Render(const GraphicsContext& context, WGPUBuffer vertex
 
 	// write to the vertex buffer
 	std::vector<Vertex3D> allVertices{};
+	allVertices.reserve(GetBufferSize() / sizeof(Vertex3D));
 
 	for (const auto& [mat, batch] : m_Batches)
 	{

@@ -203,6 +203,11 @@ void wgpu::Renderer2D::CreateVertexBuffer(size_t capacity)
 	desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex;
 	desc.mappedAtCreation = false;
 
+	if (m_VertexBuffer.buffer != nullptr)
+	{
+		wgpuBufferRelease(m_VertexBuffer.buffer);
+	}
+
 	m_VertexBuffer.buffer = wgpuDeviceCreateBuffer(m_Context->GetDevice(), &desc);
 	m_VertexBuffer.capacity = capacity;
 }

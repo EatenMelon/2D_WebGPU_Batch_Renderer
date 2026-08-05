@@ -32,6 +32,7 @@ namespace wgpu
 	private:
 		std::unordered_map<Material*, std::vector<Vertex3D>> m_Batches{};
 
+		static const size_t m_InitialBatchSize;
 	};
 }
 
