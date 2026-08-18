@@ -17,10 +17,10 @@ int main()
 	wgpu::Canvas canvas{ window };
 	auto camera{ std::make_shared<wgpu::Camera2D>() };
 
-	const wgpu::ColorF darkBlue{ 0.f, 0.f, 0.1f };
+	const wgpu::ColorF darkBlue{ 0.f, 0.f, 0.35f };
 	const wgpu::ColorF red{ 1.f, 0.f, 0.f };
 	const wgpu::ColorF green{ 0.f, 1.f, 0.f };
-	const wgpu::ColorF lessDarkBlue{ 0.f, 0.f, 0.25f };
+	const wgpu::ColorF lessDarkBlue{ 0.f, 0.f, 0.5f };
 
 	canvas.SetCamera(camera);
 	canvas.SetClearColor(darkBlue);

@@ -37,7 +37,8 @@ const std::string_view wgpu::BuiltinResources::m_SolidColorSource
 	"@fragment\n"
 	"fn fs_main(in: VertexOutput) -> @location(0) vec4f\n"
 	"{\n"
-	"    return in.color;\n"
+	"	 let linearColor = vec4f(pow(in.color.rgb, vec3f(2.2)), in.color.a); \n"
+	"    return linearColor;\n"
 	"}\n"
 };
 
