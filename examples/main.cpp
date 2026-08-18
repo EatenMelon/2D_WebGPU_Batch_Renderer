@@ -66,11 +66,19 @@ int main()
 			canvas.SetDrawColor(red);
 			canvas.DrawEllipse(ellipse, lineWidth);
 
-			const wgpu::RectF spriteFrame{ -0.25f, -0.25f, 0.5f, 0.5f };
+			const wgpu::RectF spriteFrame1{ -0.25f, -0.25f, 0.5f, 0.5f };
+			const wgpu::RectF spriteFrame2{ -0.f, -0.f, 0.5f, 0.5f };
 			canvas.SetDrawColor(lessDarkBlue);
-			canvas.FillRect(spriteFrame);
-			canvas.DrawRect(spriteFrame, 0.05f);
-			canvas.DrawTexture(sprite, spriteFrame);
+			canvas.SetDrawLayer(0.f);
+			canvas.FillRect(spriteFrame1);
+			canvas.DrawRect(spriteFrame1, 0.05f);
+
+			// order doesn't matter here
+			canvas.SetDrawLayer(2.f);
+			canvas.DrawTexture(sprite, spriteFrame2);
+			canvas.SetDrawLayer(1.f);
+			canvas.DrawTexture(sprite, spriteFrame1);
+			// now it does matter again
 			
 			const glm::vec2 start{ -0.5f, -0.33f };
 			const glm::vec2 end{ 0.5f, -0.33f };

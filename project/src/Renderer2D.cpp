@@ -4,8 +4,6 @@
 #include "RenderQueue.h"
 #include "BuiltinResources.h"
 
-#include <iostream>
-
 wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 	: m_Camera{ std::make_shared<wgpu::Camera2D>() }
 	, m_Context{ std::make_unique<GraphicsContext>(window) }
@@ -17,6 +15,7 @@ wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
 
 	m_BuiltinResources = std::make_unique<BuiltinResources>(*this);
+
 }
 
 wgpu::Renderer2D::~Renderer2D() noexcept
@@ -78,8 +77,11 @@ void wgpu::Renderer2D::Render() const
 	{
 		WGPUCommandEncoderDescriptor encoderDesc{};
 		encoderDesc.nextInChain = nullptr;
-		encoderDesc.label = WGPUStringView("Render objects");
-		WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &encoderDesc);
+		encoderDesc.label = WGPUStringView("Render opaque objects");
+		WGPUCommandEncoder encoderOpaque = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &encoderDesc);
+
+		encoderDesc.label = WGPUStringView("Render tansparent objects");
+		WGPUCommandEncoder encoderTransparent = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &encoderDesc);
 
 		// describe render pass
 		WGPURenderPassDescriptor renderPassDesc{};
@@ -109,26 +111,70 @@ void wgpu::Renderer2D::Render() const
 
 		// Stencil setup, mandatory but unused
 		depthStencilAttachment.stencilClearValue = 0;
-		depthStencilAttachment.stencilLoadOp = WGPULoadOp_Clear;
-		depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Store;
+		depthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
+		depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
 		depthStencilAttachment.stencilReadOnly = true;
 
 		renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
 
-		// begin render pass
-		WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
+		WGPURenderPassEncoder renderPassOpaque = wgpuCommandEncoderBeginRenderPass(encoderOpaque, &renderPassDesc);
+
+		// describe render pass
+		renderPassDesc = {};
+		renderPassDesc.nextInChain = nullptr;
+		renderPassDesc.depthStencilAttachment = nullptr;
+		renderPassDesc.timestampWrites = nullptr;
+
+		renderPassColorAttachment = {};
+		renderPassColorAttachment.view = targetView;
+		renderPassColorAttachment.resolveTarget = nullptr;
+		renderPassColorAttachment.loadOp = WGPULoadOp_Load;
+		renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
+		renderPassColorAttachment.clearValue = { m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a };
+		renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
+
+		renderPassDesc.colorAttachmentCount = 1;
+		renderPassDesc.colorAttachments = &renderPassColorAttachment;
+
+		// Setup depth/stencil
+		depthStencilAttachment = {};
+
+		depthStencilAttachment.view = m_DepthTextureView;
+		depthStencilAttachment.depthClearValue = 1.f;
+		depthStencilAttachment.depthLoadOp = WGPULoadOp_Load;
+		depthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
+		depthStencilAttachment.depthReadOnly = false;
+
+		// Stencil setup, mandatory but unused
+		depthStencilAttachment.stencilClearValue = 0;
+		depthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
+		depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
+		depthStencilAttachment.stencilReadOnly = true;
+
+		renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
+
+		WGPURenderPassEncoder renderPassTransparent = wgpuCommandEncoderBeginRenderPass(encoderTransparent, &renderPassDesc);
 
 		// use render pass
 		// -> Render objects here!
-		m_RenderQueue->Render(*m_Context.get(), m_VertexBuffer.buffer, renderPass);
+		m_RenderQueue->Render(*m_Context.get(), m_VertexBuffer.buffer, renderPassOpaque,  renderPassTransparent);
 
-		// end renderpass
-		wgpuRenderPassEncoderEnd(renderPass);
-		wgpuRenderPassEncoderRelease(renderPass);
+		// end renderpasses
+		wgpuRenderPassEncoderEnd(renderPassOpaque);
+		wgpuRenderPassEncoderRelease(renderPassOpaque);
+
+		wgpuRenderPassEncoderEnd(renderPassTransparent);
+		wgpuRenderPassEncoderRelease(renderPassTransparent);
 
 		// finish encoding
-		WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoder, nullptr);
-		wgpuCommandEncoderRelease(encoder);
+		WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoderOpaque, nullptr);
+		wgpuCommandEncoderRelease(encoderOpaque);
+
+		wgpuQueueSubmit(m_Context->GetQueue(), 1, &commandBuffer);
+		wgpuCommandBufferRelease(commandBuffer);
+
+		commandBuffer = wgpuCommandEncoderFinish(encoderTransparent, nullptr);
+		wgpuCommandEncoderRelease(encoderTransparent);
 
 		wgpuQueueSubmit(m_Context->GetQueue(), 1, &commandBuffer);
 		wgpuCommandBufferRelease(commandBuffer);

@@ -58,6 +58,47 @@ void wgpu::RenderQueue::Render(const GraphicsContext& context, WGPUBuffer vertex
 	}
 }
 
+void wgpu::RenderQueue::Render(const GraphicsContext& context, WGPUBuffer vertexBuffer, WGPURenderPassEncoder opaquePass, WGPURenderPassEncoder transparentPass) const
+{
+	if (m_Batches.empty()) return;
+
+	// write to the vertex buffer
+	std::vector<Vertex3D> allVertices{};
+	allVertices.reserve(GetBufferSize() / sizeof(Vertex3D));
+
+	for (const auto& [mat, batch] : m_Batches)
+	{
+		allVertices.insert(allVertices.end(), batch.begin(), batch.end());
+	}
+
+	wgpuQueueWriteBuffer(context.GetQueue(), vertexBuffer, 0, allVertices.data(), allVertices.size() * sizeof(Vertex3D));
+
+	// render vertices...
+	uint64_t offset{ 0 };
+
+	for (auto& [mat, batch] : m_Batches)
+	{
+		WGPURenderPassEncoder renderPass{ opaquePass };
+
+		if (!mat->GetPipeline()->WriteDepth())
+		{
+			renderPass = transparentPass;
+		}
+
+		wgpuRenderPassEncoderSetPipeline(renderPass, mat->GetPipeline()->GetPipeline());
+
+		if (mat->GetPipeline()->GetBindGroupLayout() != nullptr)
+		{
+			wgpuRenderPassEncoderSetBindGroup(renderPass, 0, mat->GetBindGroup(), 0, nullptr);
+		}
+
+		wgpuRenderPassEncoderSetVertexBuffer(renderPass, 0, vertexBuffer, offset, batch.size() * sizeof(Vertex3D));
+		wgpuRenderPassEncoderDraw(renderPass, static_cast<uint32_t>(batch.size()), 1, 0, 0);
+
+		offset += batch.size() * sizeof(Vertex3D);
+	}
+}
+
 void wgpu::RenderQueue::SetCamera(const CameraData& camera)
 {
 	for (auto [material, _] : m_Batches)

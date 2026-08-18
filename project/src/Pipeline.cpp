@@ -25,9 +25,10 @@ static void SetDefault(WGPUDepthStencilState& depthStencilState)
 	SetDefault(depthStencilState.stencilBack);
 }
 
-wgpu::Pipeline::Pipeline(const Shader& shader, const BindGroupLayout* bindGroupLayout)
+wgpu::Pipeline::Pipeline(const Shader& shader, bool isOpaque, const BindGroupLayout* bindGroupLayout)
 	: m_Shader{ &shader }
 	, m_BindGroupLayout{ bindGroupLayout }
+	, m_IsOpaque{ isOpaque }
 {
 	auto renderer = shader.GetRenderer();
 
@@ -122,7 +123,15 @@ wgpu::Pipeline::Pipeline(const Shader& shader, const BindGroupLayout* bindGroupL
 	SetDefault(depthStencilState);
 
 	depthStencilState.depthCompare = WGPUCompareFunction_LessEqual;
-	depthStencilState.depthWriteEnabled = WGPUOptionalBool_True;
+
+	if (m_IsOpaque)
+	{
+		depthStencilState.depthWriteEnabled = WGPUOptionalBool_True;
+	}
+	else
+	{
+		depthStencilState.depthWriteEnabled = WGPUOptionalBool_False;
+	}
 
 	WGPUTextureFormat depthTextureFormat = wgpuTextureGetFormat(renderer->GetDepthTexture());
 	depthStencilState.format = depthTextureFormat;
