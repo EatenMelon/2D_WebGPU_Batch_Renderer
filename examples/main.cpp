@@ -77,14 +77,17 @@ int main()
 			canvas.SetDrawLayer(2.f);
 			canvas.DrawTexture(sprite, spriteFrame2);
 			canvas.SetDrawLayer(1.f);
-			canvas.DrawTexture(sprite, spriteFrame1);
+			canvas.SetDrawColor(wgpu::ColorF{ 1.f, 1.f, 1.f });
+			canvas.RenderRect(*sprite.GetMaterial(), spriteFrame1);
 			// now it does matter again
 			
+			canvas.SetDrawLayer(0.f);
 			const glm::vec2 start{ -0.5f, -0.33f };
 			const glm::vec2 end{ 0.5f, -0.33f };
 			canvas.SetDrawColor(green);
 			canvas.DrawLine(start, end, lineWidth);
 			canvas.DrawLine(-start, -end, lineWidth);
+			
 		}
 		canvas.EndFrame();
 	}

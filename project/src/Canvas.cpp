@@ -120,13 +120,8 @@ void wgpu::Canvas::FillEllipse(float x, float y, float xRadius, float yRadius) c
 			RenderQuad(material, p0, p1, p2, p3);
 		};
 
-	const float zoom{ GetCamera()->GetZoom() };
-
 	constexpr float quarter{ glm::pi<float>() / 2 };
-	constexpr float minIncr{ quarter / 15.f };
-	constexpr float maxIncr{ quarter / 5.f };
-
-	const float increment{ glm::clamp(zoom / 5.f, minIncr, maxIncr) };
+	constexpr float increment{ quarter / 15.f };
 
 	for (float angle{ increment }; angle < quarter; angle += increment)
 	{
@@ -165,16 +160,12 @@ void wgpu::Canvas::DrawEllipse(float x, float y, float xRadius, float yRadius, f
 			RenderQuad(material, p10, p11, p12, p13);
 		};
 
-	const float zoom{ GetCamera()->GetZoom() };
-
 	constexpr float quarter{ glm::pi<float>() / 2.f };
-	constexpr float minIncr{ quarter / 15.f };
-	constexpr float maxIncr{ quarter / 5.f };
+	constexpr float increment{ quarter / 15.f };
 
-	const float increment{ glm::clamp(zoom / 5.f, minIncr, maxIncr) };
 	int segments = static_cast<int>(std::ceil(quarter / increment));
 
-	for (int i = 1; i <= segments; i++)
+	for (int i{ 1 }; i <= segments; i++)
 	{
 		float angleA = std::min(i * increment, quarter);
 		float angleB = (i - 1) * increment;
@@ -223,6 +214,35 @@ void wgpu::Canvas::DrawTexture(const Texture2D& texture, const RectF& dst, const
 	v3.color = texture.GetColorMultiplier();
 
 	RenderQuad(texture.GetMaterial(), v0, v1, v2, v3);
+}
+
+void wgpu::Canvas::RenderRect(Material& material, const RectF& dst, const RectF& uv) const
+{
+	Vertex2D v0{};	// bottom-left
+	v0.position = dst.pos;
+	v0.uv = uv.pos;
+	v0.uv.y += uv.size.y;
+	v0.color = m_DrawColor;
+
+	Vertex2D v1{};	// bottom-right
+	v1.position = dst.pos;
+	v1.position.x += dst.size.x;
+	v1.uv = uv.pos + uv.size;
+	v1.color = m_DrawColor;
+
+	Vertex2D v2{};	// top-right
+	v2.position = dst.pos + dst.size;
+	v2.uv = uv.pos;
+	v2.uv.x += uv.size.x;
+	v2.color = m_DrawColor;
+
+	Vertex2D v3{};	// top-left
+	v3.position = dst.pos;
+	v3.position.y += dst.size.y;
+	v3.uv = uv.pos;
+	v3.color = m_DrawColor;
+
+	RenderQuad(&material, v0, v1, v2, v3);
 }
 
 void wgpu::Canvas::SetDrawColor(const ColorF& color)

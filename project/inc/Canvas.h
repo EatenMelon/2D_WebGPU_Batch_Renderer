@@ -35,7 +35,7 @@ namespace wgpu
 		void Resize();
 
 		void DrawLine(const glm::vec2& start, const glm::vec2& end, float lineWidth = 0.01f) const;
-
+		
 		void FillRect(float left, float bottom, float width, float height) const;
 		void FillRect(const RectF& rect) const;
 		void DrawRect(float left, float bottom, float width, float height, float lineWidth = 0.01f) const;
@@ -48,6 +48,8 @@ namespace wgpu
 
 		void DrawTexture(const Texture2D& texture, const RectF& dst) const;
 		void DrawTexture(const Texture2D& texture, const RectF& dst, const RectF& src) const;
+		
+		void RenderRect(Material& material, const RectF& dst, const RectF& uv = RectF{ 0.f, 0.f, 1.f, 1.f }) const;
 
 		void SetDrawColor(const ColorF& color);
 		void SetDrawLayer(float layer);

@@ -98,7 +98,7 @@ wgpu::BuiltinResources::BuiltinResources(const Renderer2D& renderer)
 	m_SolidColorLayout->AddUniformEntry<CameraData>(0, BindingVisibility::VertexShaderStage);
 	m_SolidColorLayout->ConfirmLayout(*m_Renderer->GetContext());
 
-	m_SolidColorPipeline = std::make_unique<Pipeline>(*m_SolidColorShader.get(), true, m_SolidColorLayout.get());
+	m_SolidColorPipeline = std::make_unique<Pipeline>(*m_SolidColorShader.get(), false, m_SolidColorLayout.get());
 	m_SolidColorMaterial = std::make_unique<Material>(*m_SolidColorPipeline.get());
 
 	// resources needed for basic texture rendering
