@@ -50,6 +50,7 @@ namespace wgpu
 		void DrawTexture(const Texture2D& texture, const RectF& dst, const RectF& src) const;
 		
 		void RenderRect(Material& material, const RectF& dst, const RectF& uv = RectF{ 0.f, 0.f, 1.f, 1.f }) const;
+		void RenderTriangle(Material& material, const Vertex2D& v0, const Vertex2D& v1, const Vertex2D& v2) const;
 
 		void SetDrawColor(const ColorF& color);
 		void SetDrawLayer(float layer);

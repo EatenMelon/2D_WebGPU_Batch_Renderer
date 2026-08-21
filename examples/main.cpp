@@ -53,8 +53,9 @@ int main()
 		canvas.BeginFrame();
 		{
 			constexpr float lineWidth{ 0.0075f };
-			
+
 			const wgpu::RectF rectangle{ -0.625f, -0.25f, 0.25f, 0.5f };
+			canvas.SetDrawLayer(0.f);
 			canvas.SetDrawColor(green);
 			canvas.FillRect(rectangle);
 			canvas.SetDrawColor(red);
@@ -69,7 +70,6 @@ int main()
 			const wgpu::RectF spriteFrame1{ -0.25f, -0.25f, 0.5f, 0.5f };
 			const wgpu::RectF spriteFrame2{ -0.f, -0.f, 0.5f, 0.5f };
 			canvas.SetDrawColor(lessDarkBlue);
-			canvas.SetDrawLayer(0.f);
 			canvas.FillRect(spriteFrame1);
 			canvas.DrawRect(spriteFrame1, 0.05f);
 
@@ -87,7 +87,25 @@ int main()
 			canvas.SetDrawColor(green);
 			canvas.DrawLine(start, end, lineWidth);
 			canvas.DrawLine(-start, -end, lineWidth);
-			
+
+			canvas.SetDrawLayer(4.f);
+
+			wgpu::Vertex2D v0{};
+			v0.position = glm::vec2{ -0.5f, -0.5f };
+			v0.uv = glm::vec2{ 1.f, 1.f };
+			v0.color = wgpu::ColorF{ 0.f, 1.f, 0.f };
+
+			wgpu::Vertex2D v1{};
+			v1.position = glm::vec2{ 0.5f, -0.5f };
+			v1.uv = glm::vec2{ 0.f, 1.f };
+			v1.color = wgpu::ColorF{ 0.f, 0.f, 1.f, 0.5f };
+
+			wgpu::Vertex2D v2{};
+			v2.position = glm::vec2{ 0.f, 0.5f };
+			v2.uv = glm::vec2{ 0.5f, 0.f };
+			v2.color = wgpu::ColorF{ 1.f, 0.f, 0.f };
+
+			canvas.RenderTriangle(*sprite.GetMaterial(), v0, v1, v2);
 		}
 		canvas.EndFrame();
 	}

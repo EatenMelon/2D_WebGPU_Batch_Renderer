@@ -245,6 +245,26 @@ void wgpu::Canvas::RenderRect(Material& material, const RectF& dst, const RectF&
 	RenderQuad(&material, v0, v1, v2, v3);
 }
 
+void wgpu::Canvas::RenderTriangle(Material& material, const Vertex2D& v0, const Vertex2D& v1, const Vertex2D& v2) const
+{
+	wgpu::Vertex3D vertex0{};
+	vertex0.position = glm::vec3{ v0.position, m_DrawLayer };
+	vertex0.color = v0.color;
+	vertex0.uv = v0.uv;
+
+	wgpu::Vertex3D vertex1{};
+	vertex1.position = glm::vec3{ v1.position, m_DrawLayer };
+	vertex1.color = v1.color;
+	vertex1.uv = v1.uv;
+
+	wgpu::Vertex3D vertex2{};
+	vertex2.position = glm::vec3{ v2.position, m_DrawLayer };
+	vertex2.color = v2.color;
+	vertex2.uv = v2.uv;
+
+	m_Renderer->SubmitTriangle(material, vertex0, vertex1, vertex2);
+}
+
 void wgpu::Canvas::SetDrawColor(const ColorF& color)
 {
 	m_DrawColor = color;
