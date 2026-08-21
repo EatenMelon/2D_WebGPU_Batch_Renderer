@@ -3,6 +3,7 @@
 
 #include <webgpu/webgpu.h>
 #include <glm/glm.hpp>
+#include <SDL3/SDL_video.h>
 
 struct SDL_Window;
 
@@ -21,6 +22,7 @@ namespace wgpu
 
 		bool InitSurface();
 		void DestroySurface();
+		void UpdateWindowFlags();
 
 		WGPUInstance GetInstance() const { return m_Instance; }
 		WGPUAdapter GetAdapter() const { return m_Adapter; }
@@ -31,6 +33,7 @@ namespace wgpu
 
 		SDL_Window* GetWindow() const { return m_Window; }
 		glm::vec2 GetWindowSize() const { return m_WindowSize; }
+		bool IsWindowMinimized() const;
 		float GetAspectRatio() const;
 
 	private:
@@ -46,6 +49,7 @@ namespace wgpu
 		WGPUSurface m_Surface{ nullptr };
 		WGPUTextureFormat m_SurfaceFormat{ WGPUTextureFormat_Undefined };
 
+		SDL_WindowFlags m_WindowFlags{ NULL };
 		SDL_Window* m_Window{ nullptr };
 		glm::vec2 m_WindowSize{};
 	};

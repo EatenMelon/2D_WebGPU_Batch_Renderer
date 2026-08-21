@@ -3,7 +3,6 @@
 #include <iostream>
 #include <assert.h>
 
-#include <SDL3/SDL.h>
 #include <sdl3webgpu.h>
 #include <glm/glm.hpp>
 
@@ -53,6 +52,16 @@ wgpu::GraphicsContext::~GraphicsContext()
 
 	wgpuInstanceRelease(m_Instance);
 	m_Instance = nullptr;
+}
+
+void wgpu::GraphicsContext::UpdateWindowFlags()
+{
+	m_WindowFlags = SDL_GetWindowFlags(m_Window);
+}
+
+bool wgpu::GraphicsContext::IsWindowMinimized() const
+{
+	return m_WindowFlags & SDL_WINDOW_MINIMIZED;
 }
 
 float wgpu::GraphicsContext::GetAspectRatio() const

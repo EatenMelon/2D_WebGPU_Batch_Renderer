@@ -26,7 +26,11 @@ wgpu::Renderer2D::~Renderer2D() noexcept
 
 void wgpu::Renderer2D::BeginFrame()
 {
+	m_Context->UpdateWindowFlags();
+
 	m_RenderQueue->Flush();
+
+	if (m_Context->IsWindowMinimized()) return;
 
 	// clear the vertex buffer
 	WGPUCommandEncoderDescriptor desc{};
@@ -45,18 +49,23 @@ void wgpu::Renderer2D::BeginFrame()
 
 void wgpu::Renderer2D::SubmitTriangle(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2)
 {
+	if (m_Context->IsWindowMinimized()) return;
+
 	m_RenderQueue->PushTriangle(mat, v0, v1, v2);
 }
 
 void wgpu::Renderer2D::SubmitQuad(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2, const Vertex3D& v3)
 {
+	if (m_Context->IsWindowMinimized()) return;
+
 	m_RenderQueue->PushTriangle(mat, v0, v1, v2);
 	m_RenderQueue->PushTriangle(mat, v2, v3, v0);
-
 }
 
 void wgpu::Renderer2D::EndFrame()
 {
+	if (m_Context->IsWindowMinimized()) return;
+
 	size_t bufferSize = m_RenderQueue->GetBufferSize();
 
 	if (m_VertexBuffer.capacity < bufferSize)
@@ -69,6 +78,8 @@ void wgpu::Renderer2D::EndFrame()
 
 void wgpu::Renderer2D::Render() const
 {
+	if (m_Context->IsWindowMinimized()) return;
+
 	// get the next target texture view
 	auto [surfaceTexture, targetView] = GetNextSurfaceViewData();
 	if (!targetView) return;
