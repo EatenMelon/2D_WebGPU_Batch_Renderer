@@ -28,6 +28,9 @@ add_library(${PROJECT_NAME} STATIC
 	"${SRC_DIR}/BuiltinResources.cpp"
 )
 
+# need this for fetching
+add_library(Renderer2D::Renderer2D ALIAS Renderer2D)
+
 # include directories
 set(LIB_DIR "project/lib")
 set(INC_DIR "project/inc")
@@ -88,7 +91,7 @@ endfunction()
 add_executable(example "examples/main.cpp")
 
 target_link_libraries(example PRIVATE 
-	${PROJECT_NAME}
+	Renderer2D::Renderer2D
 	SDL3::SDL3
 )
 
