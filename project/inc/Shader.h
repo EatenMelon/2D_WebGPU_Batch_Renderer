@@ -2,17 +2,20 @@
 #define _SHADER
 
 #include <filesystem>
-
-#include "Renderer2D.h"
+#include <wgpu.h>
 
 namespace wgpu
 {
+	class Renderer2D;
+	class Canvas;
+
 	class Shader final
 	{
 	public:
 		enum class ParsingMethod{ FromFile, FromString };
 
 		Shader(const Renderer2D& renderer, const std::string& shader, ParsingMethod method = ParsingMethod::FromFile);
+		Shader(const Canvas& renderer, const std::string& shader, ParsingMethod method = ParsingMethod::FromFile);
 		~Shader() noexcept;
 
 		Shader(const Shader&) = delete;

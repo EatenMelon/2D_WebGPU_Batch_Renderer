@@ -73,7 +73,7 @@ wgpu::Texture2D::Texture2D(const Renderer2D& renderer, const std::filesystem::pa
 
 	m_Material = m_Renderer->GetBuiltinResources()->CreateTextureMaterial();
 	m_Material->SetTexture(1, this);
-	m_Material->SetSampler(2, m_Renderer->GetBuiltinResources()->GetLinearSampler());
+	m_Material->SetSampler(2, m_Renderer->GetBuiltinResources()->GetNearestSampler());
 }
 
 wgpu::Texture2D::Texture2D(const Canvas& canvas, const std::filesystem::path& path)

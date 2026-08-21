@@ -1,6 +1,7 @@
 #include <Pipeline.h>
 #include <DataTypes.h>
 
+#include <Renderer2D.h>
 #include "GraphicsContext.h"
 
 static void SetDefault(WGPUStencilFaceState& stencilFaceState)
@@ -38,7 +39,7 @@ wgpu::Pipeline::Pipeline(const Shader& shader, bool isOpaque, const BindGroupLay
 		{
 			throw std::runtime_error("Pipelines can't use unlocked bind group layouts!");
 		}
-		else if (renderer->GetContext() != m_BindGroupLayout->GetGraphicsContext())
+		else if (renderer->GetContext() != m_BindGroupLayout->GetContext())
 		{
 			throw std::runtime_error("The graphics context of the shader and the bindgroup layout don't match!");
 		}
@@ -165,4 +166,9 @@ wgpu::Pipeline::Pipeline(const Shader& shader, bool isOpaque, const BindGroupLay
 wgpu::Pipeline::~Pipeline() noexcept
 {
 	wgpuRenderPipelineRelease(m_Pipeline);
+}
+
+const wgpu::GraphicsContext* wgpu::Pipeline::GetContext() const
+{
+	return m_Shader->GetRenderer()->GetContext();
 }

@@ -5,6 +5,8 @@
 #include <stdexcept>
 
 #include "GraphicsContext.h"
+#include <Renderer2D.h>
+#include <Canvas.h>
 
 bool wgpu::BindGroupLayout::AddTextureEntry(int binding)
 {
@@ -40,9 +42,9 @@ bool wgpu::BindGroupLayout::RequiresUniform() const
 	return m_UniformEntry.has_value();
 }
 
-void wgpu::BindGroupLayout::ConfirmLayout(const GraphicsContext& context)
+void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 {
-	m_Context = &context;
+	m_Context = renderer.GetContext();
 
 	std::vector<WGPUBindGroupLayoutEntry> entries{};
 
@@ -71,7 +73,12 @@ void wgpu::BindGroupLayout::ConfirmLayout(const GraphicsContext& context)
 	desc.entryCount = entries.size();
 	desc.entries = entries.data();
 
-	m_BindGroupLayout = wgpuDeviceCreateBindGroupLayout(context.GetDevice(), &desc);
+	m_BindGroupLayout = wgpuDeviceCreateBindGroupLayout(m_Context->GetDevice(), &desc);
+}
+
+void wgpu::BindGroupLayout::ConfirmLayout(const Canvas& canvas)
+{
+	ConfirmLayout(*canvas.GetRenderer());
 }
 
 uint64_t wgpu::BindGroupLayout::GetRequiredUniformBufferSize() const

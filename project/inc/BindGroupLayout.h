@@ -10,6 +10,8 @@
 
 namespace wgpu
 {
+	class Renderer2D;
+	class Canvas;
 	class GraphicsContext;
 
 	enum class BindingVisibility
@@ -33,13 +35,14 @@ namespace wgpu
 		int GetUniformEntryBinding() const;
 		bool RequiresUniform() const;
 		
-		void ConfirmLayout(const GraphicsContext& context);
+		void ConfirmLayout(const Renderer2D& renderer);
+		void ConfirmLayout(const Canvas& canvas);
 		bool IsLocked() const { return m_BindGroupLayout != nullptr; }
 
 		uint64_t GetRequiredUniformBufferSize() const;
 
 		WGPUBindGroupLayout GetLayout() const { return m_BindGroupLayout; }
-		const GraphicsContext* GetGraphicsContext() const { return m_Context; }
+		const GraphicsContext* GetContext() const { return m_Context; }
 
 	private:
 		WGPUShaderStage GetShaderStage(BindingVisibility visibility);

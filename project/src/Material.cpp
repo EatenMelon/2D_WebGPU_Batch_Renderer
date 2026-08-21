@@ -19,7 +19,7 @@ wgpu::Material::Material(const Pipeline& pipeline)
     // Make sure to flag the buffer as BufferUsage::Uniform
     bufferDesc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Uniform;
 
-    m_UniformBuffer = wgpuDeviceCreateBuffer(m_Pipeline->GetGraphicsContext()->GetDevice(), &bufferDesc);
+    m_UniformBuffer = wgpuDeviceCreateBuffer(m_Pipeline->GetContext()->GetDevice(), &bufferDesc);
 }
 
 wgpu::Material::~Material() noexcept
@@ -66,7 +66,7 @@ void wgpu::Material::UpdateUniformBuffer()
 	if (!m_UpdateUniformBuffer) return;
 	if (!m_Uniform.any.has_value()) return;
 
-	const auto queue = m_Pipeline->GetGraphicsContext()->GetQueue();
+	const auto queue = m_Pipeline->GetContext()->GetQueue();
 
 	wgpuQueueWriteBuffer
 	(
@@ -129,7 +129,7 @@ void wgpu::Material::UpdateBindgroup()
 	bindGroupDesc.entryCount = bindings.size();
 	bindGroupDesc.entries = bindings.data();
 
-	auto device = m_Pipeline->GetGraphicsContext()->GetDevice();
+	auto device = m_Pipeline->GetContext()->GetDevice();
 	m_BindGroup = wgpuDeviceCreateBindGroup(device, &bindGroupDesc);
 	
 	m_UpdateBindGroup = false;

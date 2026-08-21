@@ -1,12 +1,14 @@
 #include <Sampler.h>
+#include <Renderer2D.h>
+#include <Canvas.h>
 #include "GraphicsContext.h"
 
-wgpu::Sampler::Sampler(const GraphicsContext& context, Preset preset)
-	: Sampler(context, GetSettings(preset))
+wgpu::Sampler::Sampler(const Renderer2D& renderer, Preset preset)
+	: Sampler(renderer, GetSettings(preset))
 {}
 
-wgpu::Sampler::Sampler(const GraphicsContext& context, AddressMode u, AddressMode v, FilterMode mag, FilterMode min)
-	: m_Context{ &context }
+wgpu::Sampler::Sampler(const Renderer2D& renderer, AddressMode u, AddressMode v, FilterMode mag, FilterMode min)
+	: m_Context{ renderer.GetContext()}
 {
 	WGPUSamplerDescriptor samplerDesc{};
 	samplerDesc.addressModeU = GetWGPUAddressMode(u);
@@ -27,13 +29,21 @@ wgpu::Sampler::Sampler(const GraphicsContext& context, AddressMode u, AddressMod
 	m_Sampler = wgpuDeviceCreateSampler(m_Context->GetDevice(), &samplerDesc);
 }
 
+wgpu::Sampler::Sampler(const Canvas& canvas, Preset preset)
+	: Sampler(*canvas.GetRenderer(), GetSettings(preset))
+{}
+
+wgpu::Sampler::Sampler(const Canvas& canvas, AddressMode u, AddressMode v, FilterMode mag, FilterMode min)
+	: Sampler(*canvas.GetRenderer(), u, v, mag, min)
+{}
+
 wgpu::Sampler::~Sampler() noexcept
 {
 	wgpuSamplerRelease(m_Sampler);
 }
 
-wgpu::Sampler::Sampler(const GraphicsContext& context, SamplerSettings settings)
-	: Sampler(context, settings.addressModeU, settings.addressModeV, settings.magFilter, settings.minFilter)
+wgpu::Sampler::Sampler(const Renderer2D& renderer, SamplerSettings settings)
+	: Sampler(renderer, settings.addressModeU, settings.addressModeV, settings.magFilter, settings.minFilter)
 {}
 
 wgpu::Sampler::SamplerSettings wgpu::Sampler::GetSettings(Preset preset)

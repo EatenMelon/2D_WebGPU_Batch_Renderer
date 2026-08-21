@@ -26,7 +26,6 @@ int main()
 	canvas.SetClearColor(darkBlue);
 
 	wgpu::Texture2D sprite{ canvas, "resources/Sprite.png" };
-	sprite.SelectSampler(wgpu::Sampler::Preset::Nearest);
 
 	bool isRunning{ true };
 	while (isRunning)
