@@ -105,6 +105,7 @@ int main()
 			v2.color = wgpu::ColorF{ 1.f, 0.f, 0.f };
 
 			canvas.RenderTriangle(*sprite.GetMaterial(), v0, v1, v2);
+			canvas.FillTriangle(v0.position, v1.position, v2.position);
 		}
 		canvas.EndFrame();
 	}

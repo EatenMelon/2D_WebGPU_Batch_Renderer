@@ -68,7 +68,25 @@ void wgpu::Canvas::DrawLine(const glm::vec2& start, const glm::vec2& end, float 
 	}
 
 	auto material = m_Renderer->GetBuiltinResources()->GetSolidColorMaterial();
-	RenderQuad(material, points[0], points[1], points[2], points[3]);
+	RenderQuad(*material, points[0], points[1], points[2], points[3]);
+}
+
+void wgpu::Canvas::FillTriangle(const glm::vec2& p0, const glm::vec2& p1, const glm::vec2& p2) const
+{
+	wgpu::Vertex3D v0{};
+	v0.position = glm::vec3{ p0, m_DrawLayer };
+	v0.color = m_DrawColor;
+
+	wgpu::Vertex3D v1{};
+	v1.position = glm::vec3{ p1, m_DrawLayer };
+	v1.color = m_DrawColor;
+
+	wgpu::Vertex3D v2{};
+	v2.position = glm::vec3{ p2, m_DrawLayer };
+	v2.color = m_DrawColor;
+
+	auto material = m_Renderer->GetBuiltinResources()->GetSolidColorMaterial();
+	m_Renderer->SubmitTriangle(*material, v0, v1, v2);
 }
 
 void wgpu::Canvas::FillRect(float left, float bottom, float width, float height) const
@@ -79,7 +97,7 @@ void wgpu::Canvas::FillRect(float left, float bottom, float width, float height)
 	const auto p3 = glm::vec2{ left + width, bottom + height };
 
 	auto material = m_Renderer->GetBuiltinResources()->GetSolidColorMaterial();
-	RenderQuad(material, p0, p1, p2, p3);
+	RenderQuad(*material, p0, p1, p2, p3);
 }
 
 void wgpu::Canvas::FillRect(const RectF& rect) const
@@ -117,7 +135,7 @@ void wgpu::Canvas::FillEllipse(float x, float y, float xRadius, float yRadius) c
 			auto p3 = GetPointOnEllipse(angleB, pos, radii);
 
 			auto material = m_Renderer->GetBuiltinResources()->GetSolidColorMaterial();
-			RenderQuad(material, p0, p1, p2, p3);
+			RenderQuad(*material, p0, p1, p2, p3);
 		};
 
 	constexpr float quarter{ glm::pi<float>() / 2 };
@@ -151,13 +169,13 @@ void wgpu::Canvas::DrawEllipse(float x, float y, float xRadius, float yRadius, f
 			auto p01 = GetPointOnEllipse(angleA, pos, innerRadii);
 			auto p02 = GetPointOnEllipse(angleB, pos, innerRadii);
 			auto p03 = GetPointOnEllipse(angleB, pos, outerRadii);
-			RenderQuad(material, p00, p01, p02, p03);
+			RenderQuad(*material, p00, p01, p02, p03);
 
 			auto p10 = GetPointOnEllipse(glm::pi<float>() - angleA, pos, outerRadii);
 			auto p11 = GetPointOnEllipse(glm::pi<float>() - angleB, pos, outerRadii);
 			auto p12 = GetPointOnEllipse(glm::pi<float>() - angleB, pos, innerRadii);
 			auto p13 = GetPointOnEllipse(glm::pi<float>() - angleA, pos, innerRadii);
-			RenderQuad(material, p10, p11, p12, p13);
+			RenderQuad(*material, p10, p11, p12, p13);
 		};
 
 	constexpr float quarter{ glm::pi<float>() / 2.f };
@@ -213,7 +231,7 @@ void wgpu::Canvas::DrawTexture(const Texture2D& texture, const RectF& dst, const
 	v3.uv = cutout.pos;
 	v3.color = texture.GetColorMultiplier();
 
-	RenderQuad(texture.GetMaterial(), v0, v1, v2, v3);
+	RenderQuad(*texture.GetMaterial(), v0, v1, v2, v3);
 }
 
 void wgpu::Canvas::RenderRect(Material& material, const RectF& dst, const RectF& uv) const
@@ -242,7 +260,7 @@ void wgpu::Canvas::RenderRect(Material& material, const RectF& dst, const RectF&
 	v3.uv = uv.pos;
 	v3.color = m_DrawColor;
 
-	RenderQuad(&material, v0, v1, v2, v3);
+	RenderQuad(material, v0, v1, v2, v3);
 }
 
 void wgpu::Canvas::RenderTriangle(Material& material, const Vertex2D& v0, const Vertex2D& v1, const Vertex2D& v2) const
@@ -263,6 +281,52 @@ void wgpu::Canvas::RenderTriangle(Material& material, const Vertex2D& v0, const 
 	vertex2.uv = v2.uv;
 
 	m_Renderer->SubmitTriangle(material, vertex0, vertex1, vertex2);
+}
+
+void wgpu::Canvas::RenderQuad(Material& mat, const glm::vec2& p0, const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3) const
+{
+	wgpu::Vertex3D v0{};
+	v0.position = glm::vec3{ p0, m_DrawLayer };
+	v0.color = m_DrawColor;
+
+	wgpu::Vertex3D v1{};
+	v1.position = glm::vec3{ p1, m_DrawLayer };
+	v1.color = m_DrawColor;
+
+	wgpu::Vertex3D v2{};
+	v2.position = glm::vec3{ p2, m_DrawLayer };
+	v2.color = m_DrawColor;
+
+	wgpu::Vertex3D v3{};
+	v3.position = glm::vec3{ p3, m_DrawLayer };
+	v3.color = m_DrawColor;
+
+	m_Renderer->SubmitQuad(mat, v0, v1, v2, v3);
+}
+
+void wgpu::Canvas::RenderQuad(Material& mat, const Vertex2D& p0, const Vertex2D& p1, const Vertex2D& p2, const Vertex2D& p3) const
+{
+	wgpu::Vertex3D v0{};
+	v0.position = glm::vec3{ p0.position, m_DrawLayer };
+	v0.color = p0.color;
+	v0.uv = p0.uv;
+
+	wgpu::Vertex3D v1{};
+	v1.position = glm::vec3{ p1.position, m_DrawLayer };
+	v1.color = p1.color;
+	v1.uv = p1.uv;
+
+	wgpu::Vertex3D v2{};
+	v2.position = glm::vec3{ p2.position, m_DrawLayer };
+	v2.color = p2.color;
+	v2.uv = p2.uv;
+
+	wgpu::Vertex3D v3{};
+	v3.position = glm::vec3{ p3.position, m_DrawLayer };
+	v3.color = p3.color;
+	v3.uv = p3.uv;
+
+	m_Renderer->SubmitQuad(mat, v0, v1, v2, v3);
 }
 
 void wgpu::Canvas::SetDrawColor(const ColorF& color)
@@ -293,52 +357,6 @@ std::shared_ptr<wgpu::Camera2D> wgpu::Canvas::GetCamera() const
 wgpu::Renderer2D* wgpu::Canvas::GetRenderer() const
 {
 	return m_Renderer.get();
-}
-
-void wgpu::Canvas::RenderQuad(Material* mat, const glm::vec2& p0, const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3) const
-{
-	wgpu::Vertex3D v0{};
-	v0.position = glm::vec3{ p0, m_DrawLayer };
-	v0.color = m_DrawColor;
-
-	wgpu::Vertex3D v1{};
-	v1.position = glm::vec3{ p1, m_DrawLayer };
-	v1.color = m_DrawColor;
-
-	wgpu::Vertex3D v2{};
-	v2.position = glm::vec3{ p2, m_DrawLayer };
-	v2.color = m_DrawColor;
-
-	wgpu::Vertex3D v3{};
-	v3.position = glm::vec3{ p3, m_DrawLayer };
-	v3.color = m_DrawColor;
-
-	m_Renderer->SubmitQuad(*mat, v0, v1, v2, v3);
-}
-
-void wgpu::Canvas::RenderQuad(Material* mat, const Vertex2D& p0, const Vertex2D& p1, const Vertex2D& p2, const Vertex2D& p3) const
-{
-	wgpu::Vertex3D v0{};
-	v0.position = glm::vec3{ p0.position, m_DrawLayer };
-	v0.color = p0.color;
-	v0.uv = p0.uv;
-
-	wgpu::Vertex3D v1{};
-	v1.position = glm::vec3{ p1.position, m_DrawLayer };
-	v1.color = p1.color;
-	v1.uv = p1.uv;
-
-	wgpu::Vertex3D v2{};
-	v2.position = glm::vec3{ p2.position, m_DrawLayer };
-	v2.color = p2.color;
-	v2.uv = p2.uv;
-
-	wgpu::Vertex3D v3{};
-	v3.position = glm::vec3{ p3.position, m_DrawLayer };
-	v3.color = p3.color;
-	v3.uv = p3.uv;
-
-	m_Renderer->SubmitQuad(*mat, v0, v1, v2, v3);
 }
 
 glm::vec2 wgpu::Canvas::GetPointOnEllipse(float angle, const glm::vec2& pos, const glm::vec2& radii) const
