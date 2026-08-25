@@ -5,20 +5,6 @@
 
 const size_t wgpu::RenderQueue::m_InitialBatchSize{ 512 };
 
-void wgpu::RenderQueue::PushTriangle(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2)
-{
-	auto [itr, inserted] = m_Batches.try_emplace(&mat, std::vector<Vertex3D>());
-
-	if (inserted)
-	{
-		itr->second.reserve(m_InitialBatchSize);
-	}
-
-	itr->second.push_back(v0);
-	itr->second.push_back(v1);
-	itr->second.push_back(v2);
-}
-
 void wgpu::RenderQueue::Flush()
 {
 	m_Batches.clear();

@@ -6,7 +6,6 @@
 namespace wgpu
 {
 	class Renderer2D;
-	class Canvas;
 	class GraphicsContext;
 
 	enum class AddressMode { Repeat, MirrorRepeat, Clamp };
@@ -19,9 +18,6 @@ namespace wgpu
 
 		Sampler(const Renderer2D& renderer, Preset preset);
 		Sampler(const Renderer2D& renderer, AddressMode u, AddressMode v, FilterMode mag, FilterMode min);
-
-		Sampler(const Canvas& canvas, Preset preset);
-		Sampler(const Canvas& canvas, AddressMode u, AddressMode v, FilterMode mag, FilterMode min);
 
 		~Sampler() noexcept;
 		Sampler(const Sampler&) = delete;

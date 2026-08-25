@@ -21,7 +21,6 @@ namespace wgpu
 		RenderQueue(RenderQueue&&) = delete;
 		RenderQueue& operator=(RenderQueue&&) = delete;
 
-		void PushTriangle(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2);
 		void Flush();
 
 		void Render(const GraphicsContext& context, WGPUBuffer vertexBuffer, WGPURenderPassEncoder renderPass) const;

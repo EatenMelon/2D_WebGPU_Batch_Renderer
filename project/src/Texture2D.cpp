@@ -5,7 +5,6 @@
 #include "Renderer2D.h"
 #include "Material.h"
 #include "BuiltinResources.h"
-#include "Canvas.h"
 
 wgpu::Texture2D::Texture2D(const Renderer2D& renderer, const std::filesystem::path& path)
 	: m_Renderer{ &renderer }
@@ -75,10 +74,6 @@ wgpu::Texture2D::Texture2D(const Renderer2D& renderer, const std::filesystem::pa
 	m_Material->SetTexture(1, this);
 	m_Material->SetSampler(2, m_Renderer->GetBuiltinResources()->GetNearestSampler());
 }
-
-wgpu::Texture2D::Texture2D(const Canvas& canvas, const std::filesystem::path& path)
-	: Texture2D(*canvas.GetRenderer(), path)
-{}
 
 wgpu::Texture2D::~Texture2D() noexcept
 {

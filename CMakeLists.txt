@@ -24,7 +24,6 @@ add_library(${PROJECT_NAME} STATIC
 	"${SRC_DIR}/Texture2D.cpp"
 	"${SRC_DIR}/Sampler.cpp"
 	"${SRC_DIR}/Camera2D.cpp"
-	"${SRC_DIR}/Canvas.cpp"
 	"${SRC_DIR}/BuiltinResources.cpp"
 )
 

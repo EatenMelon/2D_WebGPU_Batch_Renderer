@@ -13,13 +13,11 @@ namespace wgpu
 	class Renderer2D;
 	class GraphicsContext;
 	class Material;
-	class Canvas;
 	
 	class Texture2D final
 	{
 	public:
 		Texture2D(const Renderer2D& renderer, const std::filesystem::path& path);
-		Texture2D(const Canvas& canvas, const std::filesystem::path& path);
 		~Texture2D() noexcept;
 
 		Texture2D(const Texture2D&) = delete;

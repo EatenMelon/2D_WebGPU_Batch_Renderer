@@ -11,7 +11,6 @@
 namespace wgpu
 {
 	class Renderer2D;
-	class Canvas;
 	class GraphicsContext;
 
 	enum class BindingVisibility
@@ -36,7 +35,6 @@ namespace wgpu
 		bool RequiresUniform() const;
 		
 		void ConfirmLayout(const Renderer2D& renderer);
-		void ConfirmLayout(const Canvas& canvas);
 		bool IsLocked() const { return m_BindGroupLayout != nullptr; }
 
 		uint64_t GetRequiredUniformBufferSize() const;

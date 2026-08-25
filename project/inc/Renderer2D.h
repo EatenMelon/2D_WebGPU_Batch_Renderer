@@ -28,8 +28,6 @@ namespace wgpu
 		Renderer2D& operator=(Renderer2D&&) = delete;
 
 		void BeginFrame();
-		void SubmitTriangle(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2);
-		void SubmitQuad(Material& mat, const Vertex3D& v0, const Vertex3D& v1, const Vertex3D& v2, const Vertex3D& v3);
 		void EndFrame();
 		void Render() const;
 

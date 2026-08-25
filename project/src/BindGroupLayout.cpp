@@ -6,7 +6,6 @@
 
 #include "GraphicsContext.h"
 #include <Renderer2D.h>
-#include <Canvas.h>
 
 bool wgpu::BindGroupLayout::AddTextureEntry(int binding)
 {
@@ -74,11 +73,6 @@ void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 	desc.entries = entries.data();
 
 	m_BindGroupLayout = wgpuDeviceCreateBindGroupLayout(m_Context->GetDevice(), &desc);
-}
-
-void wgpu::BindGroupLayout::ConfirmLayout(const Canvas& canvas)
-{
-	ConfirmLayout(*canvas.GetRenderer());
 }
 
 uint64_t wgpu::BindGroupLayout::GetRequiredUniformBufferSize() const

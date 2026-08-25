@@ -2,7 +2,6 @@
 #include <fstream>
 
 #include <Renderer2D.h>
-#include <Canvas.h>
 
 #include "GraphicsContext.h"
 
@@ -31,10 +30,6 @@ wgpu::Shader::Shader(const Renderer2D& renderer, const std::string& shader, Pars
 
     LoadShaderFromSource(shaderSource);
 }
-
-wgpu::Shader::Shader(const Canvas& canvas, const std::string& shader, ParsingMethod method)
-    : Shader(*canvas.GetRenderer(), shader, method)
-{}
 
 wgpu::Shader::~Shader() noexcept
 {

@@ -1,6 +1,5 @@
 #include <Sampler.h>
 #include <Renderer2D.h>
-#include <Canvas.h>
 #include "GraphicsContext.h"
 
 wgpu::Sampler::Sampler(const Renderer2D& renderer, Preset preset)
@@ -28,14 +27,6 @@ wgpu::Sampler::Sampler(const Renderer2D& renderer, AddressMode u, AddressMode v,
 
 	m_Sampler = wgpuDeviceCreateSampler(m_Context->GetDevice(), &samplerDesc);
 }
-
-wgpu::Sampler::Sampler(const Canvas& canvas, Preset preset)
-	: Sampler(*canvas.GetRenderer(), GetSettings(preset))
-{}
-
-wgpu::Sampler::Sampler(const Canvas& canvas, AddressMode u, AddressMode v, FilterMode mag, FilterMode min)
-	: Sampler(*canvas.GetRenderer(), u, v, mag, min)
-{}
 
 wgpu::Sampler::~Sampler() noexcept
 {
