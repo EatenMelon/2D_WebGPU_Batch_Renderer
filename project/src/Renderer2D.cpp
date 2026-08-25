@@ -83,7 +83,7 @@ void wgpu::Renderer2D::Render() const
 		WGPUCommandEncoderDescriptor encoderDesc{};
 		encoderDesc.nextInChain = nullptr;
 		encoderDesc.label = WGPUStringView("Render opaque objects");
-		WGPUCommandEncoder encoderOpaque = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &encoderDesc);
+		WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &encoderDesc);
 
 		// describe render pass
 		WGPURenderPassDescriptor renderPassDesc{};
@@ -119,19 +119,19 @@ void wgpu::Renderer2D::Render() const
 
 		renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
 
-		WGPURenderPassEncoder renderPassOpaque = wgpuCommandEncoderBeginRenderPass(encoderOpaque, &renderPassDesc);
+		WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
 
 		// use render pass
 		// -> Render objects here!
-		m_RenderQueue->Render(*this, m_Vertex.buffer, m_Index.buffer, renderPassOpaque);
+		m_RenderQueue->Render(*this, m_Vertex.buffer, m_Index.buffer, renderPass);
 
 		// end renderpasses
-		wgpuRenderPassEncoderEnd(renderPassOpaque);
-		wgpuRenderPassEncoderRelease(renderPassOpaque);
+		wgpuRenderPassEncoderEnd(renderPass);
+		wgpuRenderPassEncoderRelease(renderPass);
 
 		// finish encoding
-		WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoderOpaque, nullptr);
-		wgpuCommandEncoderRelease(encoderOpaque);
+		WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoder, nullptr);
+		wgpuCommandEncoderRelease(encoder);
 
 		wgpuQueueSubmit(m_Context->GetQueue(), 1, &commandBuffer);
 		wgpuCommandBufferRelease(commandBuffer);

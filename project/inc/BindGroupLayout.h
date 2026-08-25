@@ -3,8 +3,8 @@
 
 #include <cstdint>
 #include <unordered_map>
-#include <optional>
 #include <typeindex>
+#include <memory>
 
 #include <wgpu.h>
 
@@ -34,6 +34,8 @@ namespace wgpu
 		int GetUniformEntryBinding() const;
 		bool RequiresUniform() const;
 		
+		// this locks down the BindgroupLayout, 
+		// to make it ready for use and making it immutable
 		void ConfirmLayout(const Renderer2D& renderer);
 		bool IsLocked() const { return m_BindGroupLayout != nullptr; }
 
@@ -43,12 +45,15 @@ namespace wgpu
 		const GraphicsContext* GetContext() const { return m_Context; }
 
 	private:
+		typedef std::pair<std::type_index, WGPUBindGroupLayoutEntry> UniformEntry;
+
 		WGPUShaderStage GetShaderStage(BindingVisibility visibility);
 
 		WGPUBindGroupLayout m_BindGroupLayout{ nullptr };
 
-		std::optional<std::pair<std::type_index, WGPUBindGroupLayoutEntry>> m_UniformEntry{};
+		std::unique_ptr<UniformEntry> m_UniformEntry{ nullptr };
 		std::unordered_map<int, WGPUBindGroupLayoutEntry> m_Entries{};
+
 		const GraphicsContext* m_Context{ nullptr };
 	};
 
@@ -65,7 +70,7 @@ namespace wgpu
 		entry.buffer.type = WGPUBufferBindingType_Uniform;
 		entry.buffer.minBindingSize = sizeof(T);
 
-		m_UniformEntry.emplace(typeid(T), entry);
+		m_UniformEntry = std::make_unique<UniformEntry>(typeid(T), entry);
 
 		return true;
 	}
@@ -73,10 +78,10 @@ namespace wgpu
 	template<typename T>
 	inline int BindGroupLayout::GetUniformEntryBinding() const
 	{
-		if (!m_UniformEntry.has_value()) return -1;
-		if (m_UniformEntry.value().first != typeid(T)) return -1;
+		if (m_UniformEntry == nullptr) return -1;
+		if (m_UniformEntry->first != typeid(T)) return -1;
 
-		return m_UniformEntry.value().second.binding;
+		return m_UniformEntry->second.binding;
 	}
 
 	

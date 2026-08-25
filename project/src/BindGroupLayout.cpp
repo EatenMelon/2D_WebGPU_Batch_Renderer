@@ -38,7 +38,7 @@ bool wgpu::BindGroupLayout::AddSamplerEntry(int binding)
 
 bool wgpu::BindGroupLayout::RequiresUniform() const
 {
-	return m_UniformEntry.has_value();
+	return m_UniformEntry != nullptr;
 }
 
 void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
@@ -47,9 +47,9 @@ void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 
 	std::vector<WGPUBindGroupLayoutEntry> entries{};
 
-	if (m_UniformEntry.has_value())
+	if (m_UniformEntry != nullptr)
 	{
-		entries.push_back(m_UniformEntry.value().second);
+		entries.push_back(m_UniformEntry->second);
 	}
 
 	for (const auto& [binding, entry] : m_Entries)
@@ -77,12 +77,12 @@ void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 
 uint64_t wgpu::BindGroupLayout::GetRequiredUniformBufferSize() const
 {
-	if (!m_UniformEntry.has_value())
+	if (m_UniformEntry == nullptr)
 	{
 		return 0;
 	}
 
-	return m_UniformEntry.value().second.buffer.minBindingSize;
+	return m_UniformEntry->second.buffer.minBindingSize;
 }
 
 WGPUShaderStage wgpu::BindGroupLayout::GetShaderStage(BindingVisibility visibility)
@@ -100,6 +100,6 @@ WGPUShaderStage wgpu::BindGroupLayout::GetShaderStage(BindingVisibility visibili
 
 	default: break;
 	}
-
+	
 	return WGPUShaderStage_None;
 }
