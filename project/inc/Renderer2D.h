@@ -28,6 +28,7 @@ namespace wgpu
 		Renderer2D& operator=(Renderer2D&&) = delete;
 
 		void BeginFrame();
+		void BatchMesh(Material* material, const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices) const;
 		void EndFrame();
 		void Render() const;
 
@@ -37,34 +38,45 @@ namespace wgpu
 
 		std::shared_ptr<Camera2D> GetCamera() const;
 
-		WGPUBuffer GetVertexBuffer() const { return m_VertexBuffer.buffer; }
 		WGPUTexture GetDepthTexture() const { return m_DepthTexture; }
 
 		const GraphicsContext* GetContext() const { return m_Context.get(); }
 		const BuiltinResources* GetBuiltinResources() const { return m_BuiltinResources.get(); }
 
 	private:
+		// additional render resources
 		ColorF m_ClearColor{ 0.f, 0.f, 0.f, 1.f };
 		std::shared_ptr<Camera2D> m_Camera{ nullptr };
 		std::unique_ptr<BuiltinResources> m_BuiltinResources{ nullptr };
 
+		// surface view
 		std::pair<WGPUSurfaceTexture, WGPUTextureView> GetNextSurfaceViewData() const;
-		void CreateVertexBuffer(size_t capacity);
+
+		// depth buffer
 		void InitDepthBuffer();
 		void ReleaseDepthBuffer();
 
-		std::unique_ptr<GraphicsContext> m_Context{ nullptr };
-		std::unique_ptr<RenderQueue> m_RenderQueue{ nullptr };
+		WGPUTexture m_DepthTexture{ nullptr };
+		WGPUTextureView m_DepthTextureView{ nullptr };
 
-		struct VertexBuffer
+		// buffers
+		void CreateVertexBuffer(size_t capacity);
+		void CreateIndexBuffer(size_t capacity);
+
+		struct Buffer
 		{
 			WGPUBuffer buffer{ nullptr };
 			size_t capacity{};
 		};
 
-		VertexBuffer m_VertexBuffer{};
-		WGPUTexture m_DepthTexture{ nullptr };
-		WGPUTextureView m_DepthTextureView{ nullptr };
+		Buffer m_Vertex{};
+		Buffer m_Index{};
+
+		// render info
+		std::unique_ptr<GraphicsContext> m_Context{ nullptr };
+
+		// batch management
+		std::unique_ptr<RenderQueue> m_RenderQueue{ nullptr };
 	};
 }
 

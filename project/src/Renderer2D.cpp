@@ -11,6 +11,7 @@ wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 {
 	InitDepthBuffer();
 	CreateVertexBuffer(100 * sizeof(Vertex3D));
+	CreateIndexBuffer(100 * sizeof(uint32_t));
 
 	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
 
@@ -20,8 +21,8 @@ wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 
 wgpu::Renderer2D::~Renderer2D() noexcept
 {
-	wgpuBufferRelease(m_VertexBuffer.buffer);
-	m_VertexBuffer.buffer = nullptr;
+	wgpuBufferRelease(m_Vertex.buffer);
+	m_Vertex.buffer = nullptr;
 }
 
 void wgpu::Renderer2D::BeginFrame()
@@ -36,7 +37,7 @@ void wgpu::Renderer2D::BeginFrame()
 	WGPUCommandEncoderDescriptor desc{};
 	WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &desc);
 
-	wgpuCommandEncoderClearBuffer(encoder, m_VertexBuffer.buffer, 0, WGPU_WHOLE_SIZE);
+	wgpuCommandEncoderClearBuffer(encoder, m_Vertex.buffer, 0, WGPU_WHOLE_SIZE);
 
 	WGPUCommandBufferDescriptor cmdDesc{};
 	WGPUCommandBuffer cmd = wgpuCommandEncoderFinish(encoder, &cmdDesc);
@@ -47,15 +48,25 @@ void wgpu::Renderer2D::BeginFrame()
 	wgpuCommandEncoderRelease(encoder);
 }
 
+void wgpu::Renderer2D::BatchMesh(Material* material, const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices) const
+{
+	m_RenderQueue->SubmitMesh(material, vertices, indices);
+}
+
 void wgpu::Renderer2D::EndFrame()
 {
 	if (m_Context->IsWindowMinimized()) return;
 
-	size_t bufferSize = m_RenderQueue->GetBufferSize();
-
-	if (m_VertexBuffer.capacity < bufferSize)
+	const size_t vertexBufferSize = m_RenderQueue->GetVertexBufferSize();
+	if (m_Vertex.capacity < vertexBufferSize)
 	{
-		CreateVertexBuffer(bufferSize * 2);
+		CreateVertexBuffer(vertexBufferSize * 2);
+	}
+
+	const size_t indexBufferSize = m_RenderQueue->GetIndexBufferSize();
+	if (m_Index.capacity < indexBufferSize)
+	{
+		CreateIndexBuffer(indexBufferSize * 2);
 	}
 
 	m_RenderQueue->SetCamera(m_Camera->GetCameraData());
@@ -75,9 +86,6 @@ void wgpu::Renderer2D::Render() const
 		encoderDesc.nextInChain = nullptr;
 		encoderDesc.label = WGPUStringView("Render opaque objects");
 		WGPUCommandEncoder encoderOpaque = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &encoderDesc);
-
-		encoderDesc.label = WGPUStringView("Render tansparent objects");
-		WGPUCommandEncoder encoderTransparent = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &encoderDesc);
 
 		// describe render pass
 		WGPURenderPassDescriptor renderPassDesc{};
@@ -115,62 +123,17 @@ void wgpu::Renderer2D::Render() const
 
 		WGPURenderPassEncoder renderPassOpaque = wgpuCommandEncoderBeginRenderPass(encoderOpaque, &renderPassDesc);
 
-		// describe render pass
-		renderPassDesc = {};
-		renderPassDesc.nextInChain = nullptr;
-		renderPassDesc.depthStencilAttachment = nullptr;
-		renderPassDesc.timestampWrites = nullptr;
-
-		renderPassColorAttachment = {};
-		renderPassColorAttachment.view = targetView;
-		renderPassColorAttachment.resolveTarget = nullptr;
-		renderPassColorAttachment.loadOp = WGPULoadOp_Load;
-		renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
-		renderPassColorAttachment.clearValue = { m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a };
-		renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
-
-		renderPassDesc.colorAttachmentCount = 1;
-		renderPassDesc.colorAttachments = &renderPassColorAttachment;
-
-		// Setup depth/stencil
-		depthStencilAttachment = {};
-
-		depthStencilAttachment.view = m_DepthTextureView;
-		depthStencilAttachment.depthClearValue = 1.f;
-		depthStencilAttachment.depthLoadOp = WGPULoadOp_Load;
-		depthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
-		depthStencilAttachment.depthReadOnly = false;
-
-		// Stencil setup, mandatory but unused
-		depthStencilAttachment.stencilClearValue = 0;
-		depthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
-		depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
-		depthStencilAttachment.stencilReadOnly = true;
-
-		renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
-
-		WGPURenderPassEncoder renderPassTransparent = wgpuCommandEncoderBeginRenderPass(encoderTransparent, &renderPassDesc);
-
 		// use render pass
 		// -> Render objects here!
-		m_RenderQueue->Render(*m_Context.get(), m_VertexBuffer.buffer, renderPassOpaque,  renderPassTransparent);
+		m_RenderQueue->Render(*this, m_Vertex.buffer, m_Index.buffer, renderPassOpaque);
 
 		// end renderpasses
 		wgpuRenderPassEncoderEnd(renderPassOpaque);
 		wgpuRenderPassEncoderRelease(renderPassOpaque);
 
-		wgpuRenderPassEncoderEnd(renderPassTransparent);
-		wgpuRenderPassEncoderRelease(renderPassTransparent);
-
 		// finish encoding
 		WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoderOpaque, nullptr);
 		wgpuCommandEncoderRelease(encoderOpaque);
-
-		wgpuQueueSubmit(m_Context->GetQueue(), 1, &commandBuffer);
-		wgpuCommandBufferRelease(commandBuffer);
-
-		commandBuffer = wgpuCommandEncoderFinish(encoderTransparent, nullptr);
-		wgpuCommandEncoderRelease(encoderTransparent);
 
 		wgpuQueueSubmit(m_Context->GetQueue(), 1, &commandBuffer);
 		wgpuCommandBufferRelease(commandBuffer);
@@ -238,22 +201,6 @@ std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceV
 	return { surfaceTexture, targetView };
 }
 
-void wgpu::Renderer2D::CreateVertexBuffer(size_t capacity)
-{
-	WGPUBufferDescriptor desc{};
-	desc.size = capacity;
-	desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex;
-	desc.mappedAtCreation = false;
-
-	if (m_VertexBuffer.buffer != nullptr)
-	{
-		wgpuBufferRelease(m_VertexBuffer.buffer);
-	}
-
-	m_VertexBuffer.buffer = wgpuDeviceCreateBuffer(m_Context->GetDevice(), &desc);
-	m_VertexBuffer.capacity = capacity;
-}
-
 void wgpu::Renderer2D::InitDepthBuffer()
 {
 	WGPUTextureFormat depthTextureFormat = WGPUTextureFormat_Depth24Plus;
@@ -289,4 +236,36 @@ void wgpu::Renderer2D::ReleaseDepthBuffer()
 	wgpuTextureViewRelease(m_DepthTextureView);
 	wgpuTextureDestroy(m_DepthTexture);
 	wgpuTextureRelease(m_DepthTexture);
+}
+
+void wgpu::Renderer2D::CreateVertexBuffer(size_t capacity)
+{
+	WGPUBufferDescriptor desc{};
+	desc.size = capacity;
+	desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex;
+	desc.mappedAtCreation = false;
+
+	if (m_Vertex.buffer != nullptr)
+	{
+		wgpuBufferRelease(m_Vertex.buffer);
+	}
+
+	m_Vertex.buffer = wgpuDeviceCreateBuffer(m_Context->GetDevice(), &desc);
+	m_Vertex.capacity = capacity;
+}
+
+void wgpu::Renderer2D::CreateIndexBuffer(size_t capacity)
+{
+	WGPUBufferDescriptor desc{};
+	desc.size = capacity;
+	desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Index;
+	desc.mappedAtCreation = false;
+
+	if (m_Index.buffer != nullptr)
+	{
+		wgpuBufferRelease(m_Index.buffer);
+	}
+
+	m_Index.buffer = wgpuDeviceCreateBuffer(m_Context->GetDevice(), &desc);
+	m_Index.capacity = capacity;
 }

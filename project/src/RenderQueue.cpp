@@ -1,110 +1,96 @@
 #include "RenderQueue.h"
 
 #include <stdexcept>
-#include "Material.h"
+#include <algorithm>
+
+#include <Material.h>
+#include <Renderer2D.h>
+
+#include "GraphicsContext.h"
 
 const size_t wgpu::RenderQueue::m_InitialBatchSize{ 512 };
+
+void wgpu::RenderQueue::SubmitMesh(Material* material, const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices)
+{
+	if (material == nullptr)
+	{
+		throw std::runtime_error("Unable to submit a mesh, since given material is nullptr!");
+	}
+
+	Batch newBatch{};
+	newBatch.material = material;
+	newBatch.firstVertex = static_cast<uint32_t>(m_Verices.size());
+	newBatch.firstIndex = static_cast<uint32_t>(m_Indices.size());
+	newBatch.indexCount = static_cast<uint32_t>(indices.size());
+
+	m_Batches.emplace_back(newBatch);
+
+	m_Verices.insert(m_Verices.end(), vertices.begin(), vertices.end());
+	m_Indices.insert(m_Indices.end(), indices.begin(), indices.end());
+}
 
 void wgpu::RenderQueue::Flush()
 {
 	m_Batches.clear();
+	m_Verices.clear();
+	m_Indices.clear();
 }
 
-void wgpu::RenderQueue::Render(const GraphicsContext& context, WGPUBuffer vertexBuffer, WGPURenderPassEncoder renderPass) const
+void wgpu::RenderQueue::Render(const Renderer2D& renderer, WGPUBuffer vertexBuffer, WGPUBuffer indexBuffer, WGPURenderPassEncoder renderPass)
 {
-	if (m_Batches.empty()) return;
+	const auto context = renderer.GetContext();
 
-	// write to the vertex buffer
-	std::vector<Vertex3D> allVertices{};
-	allVertices.reserve(GetBufferSize() / sizeof(Vertex3D));
+	wgpuQueueWriteBuffer(context->GetQueue(), vertexBuffer, 0, m_Verices.data(), GetVertexBufferSize());
+	wgpuQueueWriteBuffer(context->GetQueue(), indexBuffer, 0, m_Indices.data(), GetIndexBufferSize());
 
-	for (const auto& [mat, batch] : m_Batches)
-	{
-		allVertices.insert(allVertices.end(), batch.begin(), batch.end());
-	}
-
-	wgpuQueueWriteBuffer(context.GetQueue(), vertexBuffer, 0, allVertices.data(), allVertices.size() * sizeof(Vertex3D));
-
-	// render vertices...
-	uint64_t offset{ 0 };
-
-	for (auto& [mat, batch] : m_Batches)
-	{
-		wgpuRenderPassEncoderSetPipeline(renderPass, mat->GetPipeline()->GetPipeline());
-
-		if (mat->GetPipeline()->GetBindGroupLayout() != nullptr && mat->GetBindGroup() != nullptr)
+	std::ranges::sort
+	(
+		m_Batches,
+		[](const Batch& a, const Batch& b)
 		{
-			wgpuRenderPassEncoderSetBindGroup(renderPass, 0, mat->GetBindGroup(), 0, nullptr);
+			return a.material < b.material;
+		}
+	);
+
+	Material* lastMaterial{ nullptr };
+
+	wgpuRenderPassEncoderSetVertexBuffer(renderPass, 0, vertexBuffer, 0, wgpuBufferGetSize(vertexBuffer));
+	wgpuRenderPassEncoderSetIndexBuffer(renderPass, indexBuffer, WGPUIndexFormat_Uint32, 0, wgpuBufferGetSize(indexBuffer));
+
+	for (auto& batch : m_Batches)
+	{
+		if (lastMaterial != batch.material)
+		{
+			lastMaterial = batch.material;
+
+			// set GPU state
+			wgpuRenderPassEncoderSetPipeline(renderPass, batch.material->GetPipeline()->GetPipeline());
+
+			if (
+				batch.material->GetPipeline()->GetBindGroupLayout() != nullptr && 
+				batch.material->GetBindGroup() != nullptr
+			)
+			{
+				wgpuRenderPassEncoderSetBindGroup(renderPass, 0, batch.material->GetBindGroup(), 0, nullptr);
+			}
 		}
 
-		wgpuRenderPassEncoderSetVertexBuffer(renderPass, 0, vertexBuffer, offset, batch.size() * sizeof(Vertex3D));
-		wgpuRenderPassEncoderDraw(renderPass, static_cast<uint32_t>(batch.size()), 1, 0, 0);
-		
-		offset += batch.size() * sizeof(Vertex3D);
+		wgpuRenderPassEncoderDrawIndexed(renderPass, batch.indexCount, 1, batch.firstIndex, batch.firstVertex, 0);
 	}
 }
 
-void wgpu::RenderQueue::Render(const GraphicsContext& context, WGPUBuffer vertexBuffer, WGPURenderPassEncoder opaquePass, WGPURenderPassEncoder transparentPass) const
+// srry
+void wgpu::RenderQueue::SetCamera([[maybe_unused]] const CameraData& camera)
 {
-	if (m_Batches.empty()) return;
 
-	// write to the vertex buffer
-	std::vector<Vertex3D> allVertices{};
-	allVertices.reserve(GetBufferSize() / sizeof(Vertex3D));
-
-	for (const auto& [mat, batch] : m_Batches)
-	{
-		allVertices.insert(allVertices.end(), batch.begin(), batch.end());
-	}
-
-	wgpuQueueWriteBuffer(context.GetQueue(), vertexBuffer, 0, allVertices.data(), allVertices.size() * sizeof(Vertex3D));
-
-	// render vertices...
-	uint64_t offset{ 0 };
-
-	for (auto& [mat, batch] : m_Batches)
-	{
-		WGPURenderPassEncoder renderPass{ opaquePass };
-
-		if (!mat->GetPipeline()->WriteDepth())
-		{
-			renderPass = transparentPass;
-		}
-
-		wgpuRenderPassEncoderSetPipeline(renderPass, mat->GetPipeline()->GetPipeline());
-
-		if (mat->GetPipeline()->GetBindGroupLayout() != nullptr)
-		{
-			wgpuRenderPassEncoderSetBindGroup(renderPass, 0, mat->GetBindGroup(), 0, nullptr);
-		}
-
-		wgpuRenderPassEncoderSetVertexBuffer(renderPass, 0, vertexBuffer, offset, batch.size() * sizeof(Vertex3D));
-		wgpuRenderPassEncoderDraw(renderPass, static_cast<uint32_t>(batch.size()), 1, 0, 0);
-
-		offset += batch.size() * sizeof(Vertex3D);
-	}
 }
 
-void wgpu::RenderQueue::SetCamera(const CameraData& camera)
+size_t wgpu::RenderQueue::GetVertexBufferSize() const
 {
-	for (auto [material, _] : m_Batches)
-	{
-		const int binding = material->GetUniformBinding<CameraData>();
-		
-		if (binding < 0) continue;
-
-		material->SetUniform(binding, camera);
-	}
+	return m_Verices.size() * sizeof(Vertex3D);
 }
 
-size_t wgpu::RenderQueue::GetBufferSize() const
+size_t wgpu::RenderQueue::GetIndexBufferSize() const
 {
-	size_t bufferSize{ 0 };
-
-	for (const auto& [mat, batch] : m_Batches)
-	{
-		bufferSize += batch.size();
-	}
-
-	return bufferSize * sizeof(Vertex3D);
+	return m_Indices.size() * sizeof(uint32_t);
 }

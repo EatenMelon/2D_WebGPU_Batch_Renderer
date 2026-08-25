@@ -1,15 +1,15 @@
 #ifndef RENDERQUEUE
 #define RENDERQUEUE
 
-#include <unordered_map>
 #include <vector>
 
 #include <DataTypes.h>
-#include "GraphicsContext.h"
+#include <wgpu.h>
 
 namespace wgpu
 {
 	class Material;
+	class Renderer2D;
 	class RenderQueue final
 	{
 	public:
@@ -21,19 +21,28 @@ namespace wgpu
 		RenderQueue(RenderQueue&&) = delete;
 		RenderQueue& operator=(RenderQueue&&) = delete;
 
+		void SubmitMesh(Material* material, const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices);
 		void Flush();
 
-		void Render(const GraphicsContext& context, WGPUBuffer vertexBuffer, WGPURenderPassEncoder renderPass) const;
-		void Render(const GraphicsContext& context, WGPUBuffer vertexBuffer, WGPURenderPassEncoder opaquePass, WGPURenderPassEncoder transparentPass) const;
+		void Render(const Renderer2D& renderer, WGPUBuffer vertexBuffer, WGPUBuffer indexBuffer, WGPURenderPassEncoder renderPass);
 		void SetCamera(const CameraData& camera);
 
-		size_t GetBufferSize() const;
+		size_t GetVertexBufferSize() const;
+		size_t GetIndexBufferSize() const;
 
 	private:
-		// can also be done with two vetors:
-		// vector a : stores al vertices
-		// vector b : stores batches => {material*, first vertex idx, num vertices}
-		std::unordered_map<Material*, std::vector<Vertex3D>> m_Batches{};
+		// acts as a cursor for the stored index and vertex arrays
+		struct Batch
+		{
+			Material* material{ nullptr };
+			uint32_t firstIndex{ 0 };
+			uint32_t indexCount{ 0 };
+			uint32_t firstVertex{ 0 };
+		};
+
+		std::vector<Batch> m_Batches{};
+		std::vector<Vertex3D> m_Verices{};
+		std::vector<uint32_t> m_Indices{};
 
 		static const size_t m_InitialBatchSize;
 	};
