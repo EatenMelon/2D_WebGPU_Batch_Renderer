@@ -68,8 +68,6 @@ void wgpu::Renderer2D::EndFrame()
 	{
 		CreateIndexBuffer(indexBufferSize * 2);
 	}
-
-	m_RenderQueue->SetCamera(m_Camera->GetCameraData());
 }
 
 void wgpu::Renderer2D::Render() const

@@ -12,6 +12,8 @@ const size_t wgpu::RenderQueue::m_InitialBatchSize{ 512 };
 
 void wgpu::RenderQueue::SubmitMesh(Material* material, const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices)
 {
+	// TODO : Figure out what happens when inputting drifferent kinds of geometry!
+
 	if (material == nullptr)
 	{
 		throw std::runtime_error("Unable to submit a mesh, since given material is nullptr!");
@@ -77,12 +79,6 @@ void wgpu::RenderQueue::Render(const Renderer2D& renderer, WGPUBuffer vertexBuff
 
 		wgpuRenderPassEncoderDrawIndexed(renderPass, batch.indexCount, 1, batch.firstIndex, batch.firstVertex, 0);
 	}
-}
-
-// srry
-void wgpu::RenderQueue::SetCamera([[maybe_unused]] const CameraData& camera)
-{
-
 }
 
 size_t wgpu::RenderQueue::GetVertexBufferSize() const
