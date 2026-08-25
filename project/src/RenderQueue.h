@@ -31,6 +31,9 @@ namespace wgpu
 		size_t GetBufferSize() const;
 
 	private:
+		// can also be done with two vetors:
+		// vector a : stores al vertices
+		// vector b : stores batches => {material*, first vertex idx, num vertices}
 		std::unordered_map<Material*, std::vector<Vertex3D>> m_Batches{};
 
 		static const size_t m_InitialBatchSize;
