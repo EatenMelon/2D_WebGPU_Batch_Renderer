@@ -57,17 +57,11 @@ namespace wgpu
 		std::unique_ptr<BuiltinResources> m_BuiltinResources{ nullptr };
 
 		// rendering tasks
-		void RenderObjects(WGPUTextureView targetView) const;
-		void RenderPostEffect(Material* effect, WGPUTextureView targetView) const;
-
-		struct PingPongView
-		{
-			WGPUTextureView ping{ nullptr };
-			WGPUTextureView pong{ nullptr };
-		};
+		void RenderObjects(WGPUTextureView targetView, WGPUCommandEncoder encoder) const;
+		void RenderPostEffect(Material* effect, WGPUTextureView targetView, WGPUCommandEncoder encoder) const;
 
 		// surface view
-		std::pair<WGPUSurfaceTexture, PingPongView> GetNextSurfaceViewData() const;
+		std::pair<WGPUSurfaceTexture, WGPUTextureView> GetNextSurfaceViewData() const;
 
 		// depth buffer
 		void InitDepthBuffer();
@@ -95,6 +89,20 @@ namespace wgpu
 		// batch management
 		std::unique_ptr<RenderQueue> m_RenderQueue{ nullptr };
 		std::vector<Material*> m_PostEffects{ nullptr };
+
+		// post processing
+		void InitPostProcessingData();
+		void DestroyPostProcessingData();
+
+		struct PostProcessingData
+		{
+			WGPUTextureView pingView{ nullptr };
+			WGPUTextureView pongView{ nullptr };
+			WGPUTexture pingTexture{ nullptr };
+			WGPUTexture pongTexture{ nullptr };
+		};
+
+		PostProcessingData m_PPData{};
 	};
 }
 

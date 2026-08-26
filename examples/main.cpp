@@ -128,6 +128,7 @@ int main()
 	wgpu::Material ppMaterial{ ppPipeline };
 
 	wgpu::Mesh3D mesh{};
+	bool invertColors{ false };
 
 	// main loop
 	bool isRunning{ true };
@@ -144,6 +145,21 @@ int main()
 				renderer.Resize();
 				material->SetUniform<wgpu::CameraData>(bindingColor, camera->GetCameraData());
 				sprite.GetMaterial()->SetUniform<wgpu::CameraData>(bindingSprite, camera->GetCameraData());
+				break;
+
+			case SDL_EVENT_MOUSE_MOTION:
+				if (event.motion.state & SDL_BUTTON_LEFT)
+				{
+					const glm::vec2 motion{ -event.motion.xrel, event.motion.yrel };
+
+					camera->Move(motion / 1000.f);
+				}
+				material->SetUniform<wgpu::CameraData>(bindingColor, camera->GetCameraData());
+				sprite.GetMaterial()->SetUniform<wgpu::CameraData>(bindingSprite, camera->GetCameraData());
+				break;
+
+			case SDL_EVENT_KEY_UP:
+				invertColors = event.key.key == SDLK_SPACE;
 				break;
 			}
 		}
@@ -189,7 +205,15 @@ int main()
 		}
 		renderer.EndFrame();
 		{
-			renderer.SubmitPostProcessingEffect(&ppMaterial);
+			// just to show that multiple effects can be layered
+			if (invertColors)
+			{
+				renderer.SubmitPostProcessingEffect(&ppMaterial);
+				renderer.SubmitPostProcessingEffect(&ppMaterial);
+				renderer.SubmitPostProcessingEffect(&ppMaterial);
+				renderer.SubmitPostProcessingEffect(&ppMaterial);
+				renderer.SubmitPostProcessingEffect(&ppMaterial);
+			}
 		}
 		renderer.Render();
 	}

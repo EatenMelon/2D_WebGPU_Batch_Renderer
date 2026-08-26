@@ -24,14 +24,16 @@ wgpu::Material::Material(const Pipeline& pipeline)
 
 wgpu::Material::~Material() noexcept
 {
-	if(m_BindGroup != nullptr)
+	if (m_BindGroup != nullptr)
 	{
 		wgpuBindGroupRelease(m_BindGroup);
+		m_BindGroup = nullptr;
 	}
 
-	if(m_UniformBuffer != nullptr)
+	if (m_UniformBuffer != nullptr)
 	{
 		wgpuBufferRelease(m_UniformBuffer);
+		m_UniformBuffer = nullptr;
 	}
 }
 
@@ -86,7 +88,6 @@ void wgpu::Material::UpdateUniformBuffer()
 	if (!m_Uniform.any.has_value()) return;
 
 	const auto queue = m_Pipeline->GetContext()->GetQueue();
-
 	wgpuQueueWriteBuffer
 	(
 		queue,
@@ -102,6 +103,12 @@ void wgpu::Material::UpdateUniformBuffer()
 void wgpu::Material::UpdateBindgroup()
 {
 	if (!m_UpdateBindGroup) return;
+
+	if (m_BindGroup != nullptr)
+	{
+		wgpuBindGroupRelease(m_BindGroup);
+		m_BindGroup = nullptr;
+	}
 
 	std::vector<WGPUBindGroupEntry> bindings{};
 

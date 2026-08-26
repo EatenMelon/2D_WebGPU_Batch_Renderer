@@ -1,31 +1,29 @@
-
-@group(0) @binding(0) var frameTexture: texture_2d<f32>;
+@group(0) @binding(0)
+var frameTexture : texture_2d<f32>;
 
 @vertex
-fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4f
+fn vs_main(@builtin(vertex_index) i : u32) -> @builtin(position)
+    vec4f
 {
-    var p = vec2f(0.0, 0.0);
-    if (in_vertex_index == 0u)
-    {
-        p = vec2f(-1.0, 1.0);
-    }
-    else if (in_vertex_index == 1u)
-    {
-        p = vec2f(-1.0, -1.0);
-    }
-    else if (in_vertex_index == 2u)
-    {
-        p = vec2f(1.0, -1.0);
-    }
-    else if (in_vertex_index == 3u)
-    {
-        p = vec2f(1.0, 1.0);
-    }
-    return vec4f(p, 0.0, 1.0);
+    var p = array<vec2f, 3>(
+        vec2f(-1.0, -1.0),
+        vec2f( 3.0, -1.0),
+        vec2f(-1.0,  3.0)
+    );
+
+    return vec4f(p[i], 0.0, 1.0);
 }
 
 @fragment
-fn fs_main() -> @location(0) vec4f
+fn fs_main(@builtin(position) pos : vec4f) -> @location(0) vec4f
 {
-    return vec4f(0.0, 0.4, 1.0, 1.0);
+    let color = textureLoad(
+        frameTexture,
+        vec2i(pos.xy),
+        0
+    );
+
+    let out = vec4f(1 - color.r, 1 - color.g, 1 - color.b, 1);
+
+    return out;
 }
