@@ -43,6 +43,9 @@ namespace wgpu
 		const GraphicsContext* GetContext() const { return m_Context.get(); }
 		const BuiltinResources* GetBuiltinResources() const { return m_BuiltinResources.get(); }
 
+		// temp
+		Material* GetSolidColorMaterial() const;
+
 	private:
 		// additional render resources
 		ColorF m_ClearColor{ 0.f, 0.f, 0.f, 1.f };

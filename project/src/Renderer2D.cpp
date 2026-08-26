@@ -82,7 +82,7 @@ void wgpu::Renderer2D::Render() const
 	{
 		WGPUCommandEncoderDescriptor encoderDesc{};
 		encoderDesc.nextInChain = nullptr;
-		encoderDesc.label = WGPUStringView("Render opaque objects");
+		encoderDesc.label = WGPUStringView("Render objects");
 		WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &encoderDesc);
 
 		// describe render pass
@@ -170,6 +170,11 @@ void wgpu::Renderer2D::Resize()
 std::shared_ptr<wgpu::Camera2D> wgpu::Renderer2D::GetCamera() const
 {
 	return m_Camera;
+}
+
+wgpu::Material* wgpu::Renderer2D::GetSolidColorMaterial() const
+{
+	return m_BuiltinResources->GetSolidColorMaterial();
 }
 
 std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceViewData() const
