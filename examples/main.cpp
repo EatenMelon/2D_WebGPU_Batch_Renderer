@@ -144,37 +144,36 @@ int main()
 
 			float scale{ 0.33f };
 			float angle{ time };
-			glm::vec3 pos{ scale * cosf(angle), scale * sinf(angle), 0.f };
 
-
+			glm::vec3 pos{ scale * cosf(angle), scale * sinf(angle), 1.f };
 			LoadStar(vertices, indices, pos, wgpu::ColorF(0.f, 1.f, 0.f, 0.5f));
 			renderer.BatchMesh(material, vertices, indices);
 			
-			LoadQuad(vertices, indices, glm::vec3(-0.5f, 0.f, 1.f), wgpu::ColorF(0.f, 1.f, 0.f));
+			LoadQuad(vertices, indices, glm::vec3(-0.5f, 0.f, 0.f), wgpu::ColorF(0.f, 1.f, 0.f));
 			renderer.BatchMesh(sprite.GetMaterial(), vertices, indices);
 
 			angle += pi / 2.f;
-			pos = glm::vec3(scale * cosf(angle), scale * sinf(angle), 0.f);
+			pos = glm::vec3(scale * cosf(angle), scale * sinf(angle), 1.f);
 			LoadStar(vertices, indices, pos, wgpu::ColorF(0.f, 0.f, 1.f, 0.5f));
 			renderer.BatchMesh(material, vertices, indices);
 			
-			LoadQuad(vertices, indices, glm::vec3(0.5f, 0.f, 1.f), wgpu::ColorF(0.f, 0.f, 1.f));
+			LoadQuad(vertices, indices, glm::vec3(0.5f, 0.f, 0.f), wgpu::ColorF(0.f, 0.f, 1.f));
 			renderer.BatchMesh(sprite.GetMaterial(), vertices, indices);
 
 			angle += pi / 2.f;
-			pos = glm::vec3(scale * cosf(angle), scale * sinf(angle), 0.f);
+			pos = glm::vec3(scale * cosf(angle), scale * sinf(angle), 1.f);
 			LoadStar(vertices, indices, pos, wgpu::ColorF(0.f, 1.f, 1.f, 0.5f));
 			renderer.BatchMesh(material, vertices, indices);
 
-			LoadQuad(vertices, indices, glm::vec3(0.f, 0.5f, 1.f), wgpu::ColorF(0.f, 1.f, 1.f));
+			LoadQuad(vertices, indices, glm::vec3(0.f, 0.5f, 0.f), wgpu::ColorF(0.f, 1.f, 1.f));
 			renderer.BatchMesh(sprite.GetMaterial(), vertices, indices);
 
 			angle += pi / 2.f;
-			pos = glm::vec3(scale * cosf(angle), scale * sinf(angle), 0.f);
+			pos = glm::vec3(scale * cosf(angle), scale * sinf(angle), 1.f);
 			LoadStar(vertices, indices, pos, wgpu::ColorF(1.f, 0.f, 1.f, 0.5f));
 			renderer.BatchMesh(material, vertices, indices);
 
-			LoadQuad(vertices, indices, glm::vec3(0.f, -0.5f, 1.f), wgpu::ColorF(1.f, 0.f, 1.f));
+			LoadQuad(vertices, indices, glm::vec3(0.f, -0.5f, 0.f), wgpu::ColorF(1.f, 0.f, 1.f));
 			renderer.BatchMesh(sprite.GetMaterial(), vertices, indices);
 		}
 		renderer.EndFrame();
