@@ -26,10 +26,10 @@ static void SetDefault(WGPUDepthStencilState& depthStencilState)
 	SetDefault(depthStencilState.stencilBack);
 }
 
-wgpu::Pipeline::Pipeline(const Shader& shader, bool isOpaque, const BindGroupLayout* bindGroupLayout)
+wgpu::Pipeline::Pipeline(const Shader& shader, Type pipelineType, const BindGroupLayout* bindGroupLayout)
 	: m_Shader{ &shader }
 	, m_BindGroupLayout{ bindGroupLayout }
-	, m_IsOpaque{ isOpaque }
+	, m_Type{ pipelineType }
 {
 	auto renderer = shader.GetRenderer();
 
@@ -54,6 +54,8 @@ wgpu::Pipeline::Pipeline(const Shader& shader, bool isOpaque, const BindGroupLay
 
 	WGPUVertexBufferLayout vertexBufferLayout{};
 	std::vector<WGPUVertexAttribute> vertexAttribs(3);
+
+	if (m_Type != Type::PostProcessing)
 	{
 		// position
 		vertexAttribs[0].shaderLocation = 0;
@@ -75,9 +77,15 @@ wgpu::Pipeline::Pipeline(const Shader& shader, bool isOpaque, const BindGroupLay
 
 		vertexBufferLayout.arrayStride = sizeof(Vertex3D);
 		vertexBufferLayout.stepMode = WGPUVertexStepMode_Vertex;
+
+		desc.vertex.bufferCount = 1;
+		desc.vertex.buffers = &vertexBufferLayout;
 	}
-	desc.vertex.bufferCount = 1;
-	desc.vertex.buffers = &vertexBufferLayout;
+	else
+	{
+		desc.vertex.bufferCount = 0;
+		desc.vertex.buffers = nullptr;
+	}
 
 	desc.vertex.module = m_Shader->GetShaderModule();
 	desc.vertex.entryPoint = WGPUStringView("vs_main", 7);
@@ -119,28 +127,31 @@ wgpu::Pipeline::Pipeline(const Shader& shader, bool isOpaque, const BindGroupLay
 
 	desc.fragment = &fragmentState;
 
-	// describe stencil/depth pipeline stage
-	WGPUDepthStencilState depthStencilState{};
-	SetDefault(depthStencilState);
-
-	depthStencilState.depthCompare = WGPUCompareFunction_LessEqual;
-
-	if (m_IsOpaque)
+	if (m_Type != Type::PostProcessing)
 	{
-		depthStencilState.depthWriteEnabled = WGPUOptionalBool_True;
+		// describe stencil/depth pipeline stage
+		WGPUDepthStencilState depthStencilState{};
+		SetDefault(depthStencilState);
+
+		depthStencilState.depthCompare = WGPUCompareFunction_LessEqual;
+
+		if (m_Type == Type::GeometryOpaque)
+		{
+			depthStencilState.depthWriteEnabled = WGPUOptionalBool_True;
+		}
+		else
+		{
+			depthStencilState.depthWriteEnabled = WGPUOptionalBool_False;
+		}
+
+		WGPUTextureFormat depthTextureFormat = wgpuTextureGetFormat(renderer->GetDepthTexture());
+		depthStencilState.format = depthTextureFormat;
+
+		depthStencilState.stencilReadMask = 0;
+		depthStencilState.stencilWriteMask = 0;
+
+		desc.depthStencil = &depthStencilState;
 	}
-	else
-	{
-		depthStencilState.depthWriteEnabled = WGPUOptionalBool_False;
-	}
-
-	WGPUTextureFormat depthTextureFormat = wgpuTextureGetFormat(renderer->GetDepthTexture());
-	depthStencilState.format = depthTextureFormat;
-
-	depthStencilState.stencilReadMask = 0;
-	depthStencilState.stencilWriteMask = 0;
-
-	desc.depthStencil = &depthStencilState;
 
 	// describe multi sampling state
 	desc.multisample.count = 1;

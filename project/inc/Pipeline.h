@@ -9,7 +9,9 @@ namespace wgpu
 	class Pipeline final
 	{
 	public:
-		Pipeline(const Shader& shader, bool isOpaque = true, const BindGroupLayout* bindGroupLayout = nullptr);
+		enum class Type { GeometryOpaque, GeometryTransparent, PostProcessing };
+
+		Pipeline(const Shader& shader, Type pipelineType, const BindGroupLayout* bindGroupLayout = nullptr);
 		~Pipeline() noexcept;
 
 		Pipeline(const Pipeline&) = delete;
@@ -20,12 +22,12 @@ namespace wgpu
 		WGPURenderPipeline GetPipeline() const { return m_Pipeline; }
 		const GraphicsContext* GetContext() const;
 		const BindGroupLayout* GetBindGroupLayout() const { return m_BindGroupLayout; }
-		bool WriteDepth() const { return m_IsOpaque; }
+		bool WriteDepth() const { return m_Type == Type::GeometryOpaque; }
 
 	private:
 		const Shader* m_Shader{ nullptr };
 		const BindGroupLayout* m_BindGroupLayout{ nullptr };
-		bool m_IsOpaque{ true };
+		Type m_Type{};
 
 		WGPURenderPipeline m_Pipeline{ nullptr };
 	};

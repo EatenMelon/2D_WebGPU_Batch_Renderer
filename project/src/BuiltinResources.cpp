@@ -98,7 +98,7 @@ wgpu::BuiltinResources::BuiltinResources(const Renderer2D& renderer)
 	m_SolidColorLayout->AddUniformEntry<CameraData>(0, BindingVisibility::VertexShaderStage);
 	m_SolidColorLayout->ConfirmLayout(*m_Renderer);
 
-	m_SolidColorPipeline = std::make_unique<Pipeline>(*m_SolidColorShader.get(), false, m_SolidColorLayout.get());
+	m_SolidColorPipeline = std::make_unique<Pipeline>(*m_SolidColorShader.get(), Pipeline::Type::GeometryTransparent, m_SolidColorLayout.get());
 	m_SolidColorMaterial = std::make_unique<Material>(*m_SolidColorPipeline.get());
 
 	// resources needed for basic texture rendering
@@ -110,7 +110,7 @@ wgpu::BuiltinResources::BuiltinResources(const Renderer2D& renderer)
 	m_TextureLayout->AddSamplerEntry(2);
 	m_TextureLayout->ConfirmLayout(*m_Renderer);
 
-	m_TexturePipeline = std::make_unique<Pipeline>(*m_TextureShader.get(), true, m_TextureLayout.get());
+	m_TexturePipeline = std::make_unique<Pipeline>(*m_TextureShader.get(), Pipeline::Type::GeometryOpaque, m_TextureLayout.get());
 
 	// samplers
 	m_NearestSampler = std::make_unique<Sampler>(*m_Renderer, Sampler::Preset::Nearest);

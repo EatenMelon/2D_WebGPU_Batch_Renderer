@@ -93,7 +93,16 @@ void wgpu::Renderer2D::Render() const
 	RenderObjects(targetView.ping);
 	
 	// post processing
-	//RenderPostEffect()
+	// 
+	//for (auto effect : m_PostEffects)
+	//{
+	//	swap ping and pong
+
+	//	effect->SetFrameTexture pong
+	//	effect->SetDepthTexture depth
+
+	//	RenderPostEffect ping
+	//}
 	
 	// present surface onto window
 	wgpuSurfacePresent(m_Context->GetSurface());
