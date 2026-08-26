@@ -6,6 +6,7 @@
 #include <wgpu.h>
 
 #include "Camera2D.h"
+#include <DataTypes.h>
 
 struct SDL_Window;
 
@@ -28,7 +29,7 @@ namespace wgpu
 		Renderer2D& operator=(Renderer2D&&) = delete;
 
 		void BeginFrame();
-		void BatchMesh(Material* material, const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices) const;
+		void BatchMesh(Material* material, const Mesh3D& mesh) const;
 		void EndFrame();
 		void Render() const;
 

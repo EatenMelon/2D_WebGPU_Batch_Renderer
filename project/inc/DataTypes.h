@@ -2,6 +2,7 @@
 #define DATATYPES
 
 #include <glm/glm.hpp>
+#include <vector>
 
 namespace wgpu
 {
@@ -27,17 +28,6 @@ namespace wgpu
 		glm::vec2 size{};
 	};
 
-	struct EllipseF
-	{
-		EllipseF() = default;
-		EllipseF(float x, float y, float xRadius, float yRadius);
-		EllipseF(const glm::vec2& center, const glm::vec2& radii);
-		EllipseF(const glm::vec2& center, float radius);
-
-		glm::vec2 center{};
-		glm::vec2 radii{};
-	};
-
 	struct Vertex3D
 	{
 		glm::vec3 position{};
@@ -50,6 +40,12 @@ namespace wgpu
 		glm::vec2 position{};
 		ColorF color{};
 		glm::vec2 uv{};
+	};
+
+	struct Mesh3D
+	{
+		std::vector<Vertex3D> vertices{};
+		std::vector<uint32_t> indices{};
 	};
 
 	struct CameraData

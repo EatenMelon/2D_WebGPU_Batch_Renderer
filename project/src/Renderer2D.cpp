@@ -48,9 +48,9 @@ void wgpu::Renderer2D::BeginFrame()
 	wgpuCommandEncoderRelease(encoder);
 }
 
-void wgpu::Renderer2D::BatchMesh(Material* material, const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices) const
+void wgpu::Renderer2D::BatchMesh(Material* material, const Mesh3D& mesh) const
 {
-	m_RenderQueue->SubmitMesh(material, vertices, indices);
+	m_RenderQueue->SubmitMesh(material, mesh);
 }
 
 void wgpu::Renderer2D::EndFrame()

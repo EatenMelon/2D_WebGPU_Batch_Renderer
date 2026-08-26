@@ -18,18 +18,3 @@ wgpu::RectF::RectF(const glm::vec2 & pos, float size)
 	: pos{ pos }
 	, size{ size, size }
 {}
-
-wgpu::EllipseF::EllipseF(float x, float y, float xRadius, float yRadius)
-	: center{ x, y }
-	, radii{ xRadius, yRadius }
-{}
-
-wgpu::EllipseF::EllipseF(const glm::vec2& center, const glm::vec2& radii)
-	: center{ center }
-	, radii{ radii }
-{}
-
-wgpu::EllipseF::EllipseF(const glm::vec2 & center, float radius)
-	: center{ center }
-	, radii{ radius, radius }
-{}

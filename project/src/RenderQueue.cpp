@@ -10,7 +10,8 @@
 
 const size_t wgpu::RenderQueue::m_InitialBatchSize{ 512 };
 
-void wgpu::RenderQueue::SubmitMesh(Material* material, const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices)
+
+void wgpu::RenderQueue::SubmitMesh(Material* material, const Mesh3D& mesh)
 {
 	if (material == nullptr)
 	{
@@ -21,12 +22,12 @@ void wgpu::RenderQueue::SubmitMesh(Material* material, const std::vector<Vertex3
 	newBatch.material = material;
 	newBatch.firstVertex = static_cast<uint32_t>(m_Verices.size());
 	newBatch.firstIndex = static_cast<uint32_t>(m_Indices.size());
-	newBatch.indexCount = static_cast<uint32_t>(indices.size());
+	newBatch.indexCount = static_cast<uint32_t>(mesh.indices.size());
 
 	m_Batches.emplace_back(newBatch);
 
-	m_Verices.insert(m_Verices.end(), vertices.begin(), vertices.end());
-	m_Indices.insert(m_Indices.end(), indices.begin(), indices.end());
+	m_Verices.insert(m_Verices.end(), mesh.vertices.begin(), mesh.vertices.end());
+	m_Indices.insert(m_Indices.end(), mesh.indices.begin(), mesh.indices.end());
 }
 
 void wgpu::RenderQueue::Flush()

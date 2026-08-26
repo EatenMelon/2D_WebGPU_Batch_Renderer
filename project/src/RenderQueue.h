@@ -21,7 +21,7 @@ namespace wgpu
 		RenderQueue(RenderQueue&&) = delete;
 		RenderQueue& operator=(RenderQueue&&) = delete;
 
-		void SubmitMesh(Material* material, const std::vector<Vertex3D>& vertices, const std::vector<uint32_t>& indices);
+		void SubmitMesh(Material* material, const Mesh3D& mesh);
 		void Flush();
 
 		void Render(const Renderer2D& renderer, WGPUBuffer vertexBuffer, WGPUBuffer indexBuffer, WGPURenderPassEncoder renderPass);
