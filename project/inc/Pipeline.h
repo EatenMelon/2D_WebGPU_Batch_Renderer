@@ -22,7 +22,9 @@ namespace wgpu
 		WGPURenderPipeline GetPipeline() const { return m_Pipeline; }
 		const GraphicsContext* GetContext() const;
 		const BindGroupLayout* GetBindGroupLayout() const { return m_BindGroupLayout; }
+
 		bool WriteDepth() const { return m_Type == Type::GeometryOpaque; }
+		Type GetPipelineType() const { return m_Type; }
 
 	private:
 		const Shader* m_Shader{ nullptr };

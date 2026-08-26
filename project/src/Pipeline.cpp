@@ -43,6 +43,12 @@ wgpu::Pipeline::Pipeline(const Shader& shader, Type pipelineType, const BindGrou
 		{
 			throw std::runtime_error("The graphics context of the shader and the bindgroup layout don't match!");
 		}
+
+		const bool needsFrameBuffer = m_BindGroupLayout->GetFrameEntryBinding() >= 0;
+		if (m_Type == Type::PostProcessing && !needsFrameBuffer)
+		{
+			throw std::runtime_error("A post-processing shader requires a frame entry!");
+		}
 	}
 
 	WGPURenderPipelineDescriptor desc{};

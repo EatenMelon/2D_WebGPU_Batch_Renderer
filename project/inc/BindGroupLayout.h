@@ -24,15 +24,19 @@ namespace wgpu
 	class BindGroupLayout final
 	{
 	public:
-
 		template<typename T>
 		bool AddUniformEntry(int binding, BindingVisibility visibility);
 		bool AddTextureEntry(int binding);
 		bool AddSamplerEntry(int binding);
 
+		// used only for post processing
+		bool AddFrameEntry(int bindng);
+
 		template<typename T>
 		int GetUniformEntryBinding() const;
 		bool RequiresUniform() const;
+
+		int GetFrameEntryBinding() const;
 		
 		// this locks down the BindgroupLayout, 
 		// to make it ready for use and making it immutable
@@ -53,6 +57,7 @@ namespace wgpu
 
 		std::unique_ptr<UniformEntry> m_UniformEntry{ nullptr };
 		std::unordered_map<int, WGPUBindGroupLayoutEntry> m_Entries{};
+		std::unique_ptr<WGPUBindGroupLayoutEntry> m_FrameEntry{ nullptr };
 
 		const GraphicsContext* m_Context{ nullptr };
 	};

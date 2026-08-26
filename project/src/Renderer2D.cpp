@@ -4,6 +4,7 @@
 #include "GraphicsContext.h"
 #include "RenderQueue.h"
 #include "BuiltinResources.h"
+#include <BindGroupLayout.h>
 
 wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 	: m_Camera{ std::make_shared<wgpu::Camera2D>() }
@@ -17,7 +18,6 @@ wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
 
 	m_BuiltinResources = std::make_unique<BuiltinResources>(*this);
-
 }
 
 wgpu::Renderer2D::~Renderer2D() noexcept
@@ -91,17 +91,28 @@ void wgpu::Renderer2D::Render() const
 
 	// render objects
 	RenderObjects(targetView.ping);
-	
-	// post processing
-	// 
+
 	//for (auto effect : m_PostEffects)
 	//{
-	//	swap ping and pong
+	//	std::swap(targetView.pingView, targetView.pongView);
 
-	//	effect->SetFrameTexture pong
-	//	effect->SetDepthTexture depth
+	//	const auto pipeline = effect->GetPipeline();
 
-	//	RenderPostEffect ping
+	//	if (pipeline->GetPipelineType() != Pipeline::Type::PostProcessing)
+	//	{
+	//		throw std::runtime_error("Non post processing material is being used for post processing effect!");
+	//	}
+
+	//	const auto bindGroup = pipeline->GetBindGroupLayout();
+	//	const int binding = bindGroup->GetFrameEntryBinding();
+
+	//	if (binding < 0)
+	//	{
+	//		throw std::runtime_error("Post processing effect doesn't have a frame binding!");
+	//	}
+
+	//	effect->SetFrame(binding, targetView.pongView);
+	//	RenderPostEffect(effect, targetView.pingView);
 	//}
 	
 	// present surface onto window

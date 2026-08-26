@@ -40,6 +40,7 @@ bool wgpu::Material::SetTexture(int binding, const Texture2D* texture)
 	if (texture == nullptr) return false;
 
 	m_Textures.insert_or_assign(binding, texture);
+	m_UpdateBindGroup = true;
 
 	return true;
 }
@@ -49,6 +50,24 @@ bool wgpu::Material::SetSampler(int binding, const Sampler* sampler)
 	if (sampler == nullptr) return false;
 
 	m_Samplers.insert_or_assign(binding, sampler);
+	m_UpdateBindGroup = true;
+
+	return true;
+}
+
+bool wgpu::Material::SetFrame(int binding, WGPUTextureView frameTextureView)
+{
+	if (frameTextureView == nullptr) return false;
+
+	const auto layout = m_Pipeline->GetBindGroupLayout();
+
+	const int requiredBinding = layout->GetFrameEntryBinding();
+	if (requiredBinding < 0) return false;
+	if (requiredBinding != binding) return false;
+
+	m_FrameBuffer.binding = binding;
+	m_FrameBuffer.textureView = frameTextureView;
+	m_UpdateBindGroup = true;
 
 	return true;
 }
@@ -88,7 +107,7 @@ void wgpu::Material::UpdateBindgroup()
 
 	auto bindGroupLayout = m_Pipeline->GetBindGroupLayout();
 
-	if (m_Uniform.any.has_value())
+	if (m_Uniform.any.has_value() && bindGroupLayout->RequiresUniform())
 	{
 		WGPUBindGroupEntry entry{};
 
@@ -121,6 +140,20 @@ void wgpu::Material::UpdateBindgroup()
 		entry.sampler = sampler->GetSampler();
 
 		bindings.push_back(entry);
+	}
+
+	bool needsFrameBuffer = bindGroupLayout->GetFrameEntryBinding() >= 0;
+	if (m_FrameBuffer.textureView != nullptr && needsFrameBuffer)
+	{
+		WGPUBindGroupEntry entry{};
+
+		entry.binding = m_FrameBuffer.binding;
+		entry.textureView = m_FrameBuffer.textureView;
+		bindings.push_back(entry);
+	}
+	else if (needsFrameBuffer)
+	{
+		throw std::runtime_error("The frame buffer required has not been set!");
 	}
 
 	WGPUBindGroupDescriptor bindGroupDesc{};

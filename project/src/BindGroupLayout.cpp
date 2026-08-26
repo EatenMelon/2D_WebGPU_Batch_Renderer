@@ -36,9 +36,31 @@ bool wgpu::BindGroupLayout::AddSamplerEntry(int binding)
 	return true;
 }
 
+bool wgpu::BindGroupLayout::AddFrameEntry(int binding)
+{
+	if (IsLocked()) return false;
+
+	WGPUBindGroupLayoutEntry entry{};
+	entry.binding = binding;
+	entry.visibility = WGPUShaderStage_Fragment;
+	entry.texture.sampleType = WGPUTextureSampleType_Float;
+	entry.texture.viewDimension = WGPUTextureViewDimension_2D;
+
+	m_FrameEntry = std::make_unique<WGPUBindGroupLayoutEntry>(entry);
+
+	return true;
+}
+
 bool wgpu::BindGroupLayout::RequiresUniform() const
 {
 	return m_UniformEntry != nullptr;
+}
+
+int wgpu::BindGroupLayout::GetFrameEntryBinding() const
+{
+	if (m_FrameEntry == nullptr) return -1;
+
+	return m_FrameEntry->binding;
 }
 
 void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
@@ -55,6 +77,11 @@ void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 	for (const auto& [binding, entry] : m_Entries)
 	{
 		entries.push_back(entry);
+	}
+
+	if (m_FrameEntry != nullptr)
+	{
+		entries.push_back(*m_FrameEntry.get());
 	}
 
 	std::sort

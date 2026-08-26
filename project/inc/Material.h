@@ -26,6 +26,7 @@ namespace wgpu
 		bool SetUniform(int binding, T value);
 		bool SetTexture(int binding, const Texture2D* texture);
 		bool SetSampler(int binding, const Sampler* sampler);
+		bool SetFrame(int binding, WGPUTextureView frameTextureView);
 
 		template<typename T>
 		int GetUniformBinding();
@@ -57,15 +58,25 @@ namespace wgpu
 		std::unordered_map<int, const Texture2D*> m_Textures{};
 		std::unordered_map<int, const Sampler*> m_Samplers{};
 
+		struct Buffer
+		{
+			int binding{};
+			WGPUTextureView textureView{ nullptr };
+		};
+
+		Buffer m_FrameBuffer{};
+
 		const Pipeline* m_Pipeline{ nullptr };
 	};
 
 	template<typename T>
 	inline bool Material::SetUniform(int binding, T value)
 	{
-		auto layout = m_Pipeline->GetBindGroupLayout();
+		const auto layout = m_Pipeline->GetBindGroupLayout();
+		const int requiredBinding = layout->GetUniformEntryBinding<T>();
 
-		if (layout->GetUniformEntryBinding<T>() < 0) return false;
+		if (requiredBinding < 0) return false;
+		if (binding != requiredBinding) return false;
 		
 		m_Uniform = CreateUniform(binding, value);
 		m_UpdateUniformBuffer = true;

@@ -5,6 +5,10 @@
 
 #include <Renderer2D.h>
 #include <Camera2D.h>
+
+#include <Shader.h>
+#include <BindGroupLayout.h>
+#include <Pipeline.h>
 #include <Material.h>
 #include <Texture2D.h>
 
@@ -115,6 +119,14 @@ int main()
 	const int bindingSprite = sprite.GetMaterial()->GetUniformBinding<wgpu::CameraData>();
 	sprite.GetMaterial()->SetUniform<wgpu::CameraData>(bindingColor, camera->GetCameraData());
 
+	wgpu::Shader ppShader{ renderer, "resources/PostInverse.wgsl" };
+	wgpu::BindGroupLayout ppLayout{};
+	ppLayout.AddFrameEntry(0);
+	ppLayout.ConfirmLayout(renderer);
+
+	wgpu::Pipeline ppPipeline{ ppShader, wgpu::Pipeline::Type::PostProcessing, &ppLayout };
+	wgpu::Material ppMaterial{ ppPipeline };
+
 	wgpu::Mesh3D mesh{};
 
 	// main loop
@@ -176,6 +188,9 @@ int main()
 			renderer.BatchMesh(sprite.GetMaterial(), mesh);
 		}
 		renderer.EndFrame();
+		{
+			renderer.SubmitPostProcessingEffect(&ppMaterial);
+		}
 		renderer.Render();
 	}
 
