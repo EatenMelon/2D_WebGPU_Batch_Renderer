@@ -211,7 +211,7 @@ bool wgpu::GraphicsContext::InitSurface()
 	config.viewFormatCount = 0;
 	config.viewFormats = nullptr;
 
-	config.usage = WGPUTextureUsage_RenderAttachment;
+	config.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
 	config.device = m_Device;
 
 	config.presentMode = WGPUPresentMode_Fifo;

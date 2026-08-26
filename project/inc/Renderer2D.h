@@ -31,6 +31,9 @@ namespace wgpu
 		void BeginFrame();
 		void BatchMesh(Material* material, const Mesh3D& mesh) const;
 		void EndFrame();
+
+		void SubmitPostProcessingEffect(Material* material);
+
 		void Render() const;
 
 		void SetClearColor(const ColorF& color);
@@ -53,11 +56,18 @@ namespace wgpu
 		std::shared_ptr<Camera2D> m_Camera{ nullptr };
 		std::unique_ptr<BuiltinResources> m_BuiltinResources{ nullptr };
 
+		// rendering tasks
 		void RenderObjects(WGPUTextureView targetView) const;
 		void RenderPostEffect(Material* effect, WGPUTextureView targetView) const;
 
+		struct PingPongView
+		{
+			WGPUTextureView ping{ nullptr };
+			WGPUTextureView pong{ nullptr };
+		};
+
 		// surface view
-		std::pair<WGPUSurfaceTexture, WGPUTextureView> GetNextSurfaceViewData() const;
+		std::pair<WGPUSurfaceTexture, PingPongView> GetNextSurfaceViewData() const;
 
 		// depth buffer
 		void InitDepthBuffer();
@@ -84,6 +94,7 @@ namespace wgpu
 
 		// batch management
 		std::unique_ptr<RenderQueue> m_RenderQueue{ nullptr };
+		std::vector<Material*> m_PostEffects{ nullptr };
 	};
 }
 

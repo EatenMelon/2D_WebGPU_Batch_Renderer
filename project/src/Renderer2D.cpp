@@ -1,5 +1,6 @@
 #include <Renderer2D.h>
 
+#include <Material.h>
 #include "GraphicsContext.h"
 #include "RenderQueue.h"
 #include "BuiltinResources.h"
@@ -30,6 +31,7 @@ void wgpu::Renderer2D::BeginFrame()
 	m_Context->UpdateWindowFlags();
 
 	m_RenderQueue->Flush();
+	m_PostEffects.clear();
 
 	if (m_Context->IsWindowMinimized()) return;
 
@@ -70,16 +72,25 @@ void wgpu::Renderer2D::EndFrame()
 	}
 }
 
+void wgpu::Renderer2D::SubmitPostProcessingEffect(Material* material)
+{
+	if (material == nullptr) return;
+
+	m_PostEffects.push_back(material);
+}
+
 void wgpu::Renderer2D::Render() const
 {
 	if (m_Context->IsWindowMinimized()) return;
 
 	// get the next target texture view
 	auto [surfaceTexture, targetView] = GetNextSurfaceViewData();
-	if (!targetView) return;
+
+	if (targetView.ping == nullptr) return;
+	if (targetView.pong == nullptr) return;
 
 	// render objects
-	RenderObjects(targetView);
+	RenderObjects(targetView.ping);
 	
 	// post processing
 	//RenderPostEffect()
@@ -89,7 +100,8 @@ void wgpu::Renderer2D::Render() const
 
 	// cleanup
 	wgpuTextureRelease(surfaceTexture.texture);
-	wgpuTextureViewRelease(targetView);
+	wgpuTextureViewRelease(targetView.ping);
+	wgpuTextureViewRelease(targetView.pong);
 }
 
 void wgpu::Renderer2D::SetClearColor(const ColorF& color)
@@ -171,7 +183,7 @@ void wgpu::Renderer2D::RenderObjects(WGPUTextureView targetView) const
 	// -> Render objects here!
 	m_RenderQueue->Render(*this, m_Vertex.buffer, m_Index.buffer, renderPass);
 
-	// end renderpasses
+	// end renderpass
 	wgpuRenderPassEncoderEnd(renderPass);
 	wgpuRenderPassEncoderRelease(renderPass);
 
@@ -185,9 +197,6 @@ void wgpu::Renderer2D::RenderObjects(WGPUTextureView targetView) const
 
 void wgpu::Renderer2D::RenderPostEffect(Material* effect, WGPUTextureView targetView) const
 {
-	// don't
-	effect;
-
 	WGPUCommandEncoderDescriptor encoderDesc{};
 	encoderDesc.nextInChain = nullptr;
 	encoderDesc.label = WGPUStringView("Post processing", 16);
@@ -209,6 +218,24 @@ void wgpu::Renderer2D::RenderPostEffect(Material* effect, WGPUTextureView target
 
 	renderPassDesc.colorAttachmentCount = 1;
 	renderPassDesc.colorAttachments = &renderPassColorAttachment;
+	WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
+
+	{
+		auto pipeline = effect->GetPipeline();
+
+		wgpuRenderPassEncoderSetPipeline(renderPass, pipeline->GetPipeline());
+
+		if (pipeline->GetBindGroupLayout() != nullptr && effect->GetBindGroup() != nullptr)
+		{
+			wgpuRenderPassEncoderSetBindGroup(renderPass, 0, effect->GetBindGroup(), 0, nullptr);
+		}
+
+		wgpuRenderPassEncoderDraw(renderPass, 4, 1, 0, 0);
+	}
+
+	// end renderpass
+	wgpuRenderPassEncoderEnd(renderPass);
+	wgpuRenderPassEncoderRelease(renderPass);
 
 	// finish encoding
 	WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoder, nullptr);
@@ -218,14 +245,16 @@ void wgpu::Renderer2D::RenderPostEffect(Material* effect, WGPUTextureView target
 	wgpuCommandBufferRelease(commandBuffer);
 }
 
-std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceViewData() const
+std::pair<WGPUSurfaceTexture, wgpu::Renderer2D::PingPongView> wgpu::Renderer2D::GetNextSurfaceViewData() const
 {
+	PingPongView view{};
+
 	WGPUSurfaceTexture surfaceTexture{};
 	wgpuSurfaceGetCurrentTexture(m_Context->GetSurface(), &surfaceTexture);
 
 	if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
 	{
-		return { surfaceTexture, nullptr };
+		return { surfaceTexture, view };
 	}
 
 	WGPUTextureViewDescriptor viewDescriptor;
@@ -238,11 +267,12 @@ std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceV
 	viewDescriptor.baseArrayLayer = 0;
 	viewDescriptor.arrayLayerCount = 1;
 	viewDescriptor.aspect = WGPUTextureAspect_All;
-	viewDescriptor.usage = WGPUTextureUsage_RenderAttachment;
+	viewDescriptor.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
 
-	WGPUTextureView targetView = wgpuTextureCreateView(surfaceTexture.texture, &viewDescriptor);
+	view.ping = wgpuTextureCreateView(surfaceTexture.texture, &viewDescriptor);
+	view.pong = wgpuTextureCreateView(surfaceTexture.texture, &viewDescriptor);
 
-	return { surfaceTexture, targetView };
+	return { surfaceTexture, view };
 }
 
 void wgpu::Renderer2D::InitDepthBuffer()
