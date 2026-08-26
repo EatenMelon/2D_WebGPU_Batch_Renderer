@@ -53,6 +53,9 @@ namespace wgpu
 		std::shared_ptr<Camera2D> m_Camera{ nullptr };
 		std::unique_ptr<BuiltinResources> m_BuiltinResources{ nullptr };
 
+		void RenderObjects(WGPUTextureView targetView) const;
+		void RenderPostEffect(Material* effect, WGPUTextureView targetView) const;
+
 		// surface view
 		std::pair<WGPUSurfaceTexture, WGPUTextureView> GetNextSurfaceViewData() const;
 

@@ -79,63 +79,10 @@ void wgpu::Renderer2D::Render() const
 	if (!targetView) return;
 
 	// render objects
-	{
-		WGPUCommandEncoderDescriptor encoderDesc{};
-		encoderDesc.nextInChain = nullptr;
-		encoderDesc.label = WGPUStringView("Render objects");
-		WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &encoderDesc);
-
-		// describe render pass
-		WGPURenderPassDescriptor renderPassDesc{};
-		renderPassDesc.nextInChain = nullptr;
-		renderPassDesc.depthStencilAttachment = nullptr;
-		renderPassDesc.timestampWrites = nullptr;
-
-		WGPURenderPassColorAttachment renderPassColorAttachment{};
-		renderPassColorAttachment.view = targetView;
-		renderPassColorAttachment.resolveTarget = nullptr;
-		renderPassColorAttachment.loadOp = WGPULoadOp_Clear;
-		renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
-		renderPassColorAttachment.clearValue = { m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a };
-		renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
-
-		renderPassDesc.colorAttachmentCount = 1;
-		renderPassDesc.colorAttachments = &renderPassColorAttachment;
-
-		// Setup depth/stencil
-		WGPURenderPassDepthStencilAttachment depthStencilAttachment{};
-
-		depthStencilAttachment.view = m_DepthTextureView;
-		depthStencilAttachment.depthClearValue = 1.f;
-		depthStencilAttachment.depthLoadOp = WGPULoadOp_Clear;
-		depthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
-		depthStencilAttachment.depthReadOnly = false;
-
-		// Stencil setup, mandatory but unused
-		depthStencilAttachment.stencilClearValue = 0;
-		depthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
-		depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
-		depthStencilAttachment.stencilReadOnly = true;
-
-		renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
-
-		WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
-
-		// use render pass
-		// -> Render objects here!
-		m_RenderQueue->Render(*this, m_Vertex.buffer, m_Index.buffer, renderPass);
-
-		// end renderpasses
-		wgpuRenderPassEncoderEnd(renderPass);
-		wgpuRenderPassEncoderRelease(renderPass);
-
-		// finish encoding
-		WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoder, nullptr);
-		wgpuCommandEncoderRelease(encoder);
-
-		wgpuQueueSubmit(m_Context->GetQueue(), 1, &commandBuffer);
-		wgpuCommandBufferRelease(commandBuffer);
-	}
+	RenderObjects(targetView);
+	
+	// post processing
+	//RenderPostEffect()
 	
 	// present surface onto window
 	wgpuSurfacePresent(m_Context->GetSurface());
@@ -175,6 +122,100 @@ std::shared_ptr<wgpu::Camera2D> wgpu::Renderer2D::GetCamera() const
 wgpu::Material* wgpu::Renderer2D::GetSolidColorMaterial() const
 {
 	return m_BuiltinResources->GetSolidColorMaterial();
+}
+
+void wgpu::Renderer2D::RenderObjects(WGPUTextureView targetView) const
+{
+	WGPUCommandEncoderDescriptor encoderDesc{};
+	encoderDesc.nextInChain = nullptr;
+	encoderDesc.label = WGPUStringView("Render objects", 15);
+	WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &encoderDesc);
+
+	// describe render pass
+	WGPURenderPassDescriptor renderPassDesc{};
+	renderPassDesc.nextInChain = nullptr;
+	renderPassDesc.depthStencilAttachment = nullptr;
+	renderPassDesc.timestampWrites = nullptr;
+
+	WGPURenderPassColorAttachment renderPassColorAttachment{};
+	renderPassColorAttachment.view = targetView;
+	renderPassColorAttachment.resolveTarget = nullptr;
+	renderPassColorAttachment.loadOp = WGPULoadOp_Clear;
+	renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
+	renderPassColorAttachment.clearValue = { m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a };
+	renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
+
+	renderPassDesc.colorAttachmentCount = 1;
+	renderPassDesc.colorAttachments = &renderPassColorAttachment;
+
+	// Setup depth/stencil
+	WGPURenderPassDepthStencilAttachment depthStencilAttachment{};
+
+	depthStencilAttachment.view = m_DepthTextureView;
+	depthStencilAttachment.depthClearValue = 1.f;
+	depthStencilAttachment.depthLoadOp = WGPULoadOp_Clear;
+	depthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
+	depthStencilAttachment.depthReadOnly = false;
+
+	// Stencil setup, mandatory but unused
+	depthStencilAttachment.stencilClearValue = 0;
+	depthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
+	depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
+	depthStencilAttachment.stencilReadOnly = true;
+
+	renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
+
+	WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
+
+	// use render pass
+	// -> Render objects here!
+	m_RenderQueue->Render(*this, m_Vertex.buffer, m_Index.buffer, renderPass);
+
+	// end renderpasses
+	wgpuRenderPassEncoderEnd(renderPass);
+	wgpuRenderPassEncoderRelease(renderPass);
+
+	// finish encoding
+	WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoder, nullptr);
+	wgpuCommandEncoderRelease(encoder);
+
+	wgpuQueueSubmit(m_Context->GetQueue(), 1, &commandBuffer);
+	wgpuCommandBufferRelease(commandBuffer);
+}
+
+void wgpu::Renderer2D::RenderPostEffect(Material* effect, WGPUTextureView targetView) const
+{
+	// don't
+	effect;
+
+	WGPUCommandEncoderDescriptor encoderDesc{};
+	encoderDesc.nextInChain = nullptr;
+	encoderDesc.label = WGPUStringView("Post processing", 16);
+	WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(m_Context->GetDevice(), &encoderDesc);
+
+	// describe render pass
+	WGPURenderPassDescriptor renderPassDesc{};
+	renderPassDesc.nextInChain = nullptr;
+	renderPassDesc.depthStencilAttachment = nullptr;
+	renderPassDesc.timestampWrites = nullptr;
+
+	WGPURenderPassColorAttachment renderPassColorAttachment{};
+	renderPassColorAttachment.view = targetView;
+	renderPassColorAttachment.resolveTarget = nullptr;
+	renderPassColorAttachment.loadOp = WGPULoadOp_Load;
+	renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
+	renderPassColorAttachment.clearValue = { m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a };
+	renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
+
+	renderPassDesc.colorAttachmentCount = 1;
+	renderPassDesc.colorAttachments = &renderPassColorAttachment;
+
+	// finish encoding
+	WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoder, nullptr);
+	wgpuCommandEncoderRelease(encoder);
+
+	wgpuQueueSubmit(m_Context->GetQueue(), 1, &commandBuffer);
+	wgpuCommandBufferRelease(commandBuffer);
 }
 
 std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceViewData() const
