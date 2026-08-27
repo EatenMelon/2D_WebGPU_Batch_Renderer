@@ -12,6 +12,9 @@
 #include <Material.h>
 #include <Texture2D.h>
 
+#include <imgui.h>
+#include <backends/imgui_impl_sdl3.h>
+
 static void LoadQuad(wgpu::Mesh3D& mesh, const glm::vec3 position, const wgpu::ColorF& color)
 {
 	mesh.vertices.resize(4, wgpu::Vertex3D{});
@@ -137,6 +140,13 @@ int main()
 		SDL_Event event{};
 		while (SDL_PollEvent(&event))
 		{
+			ImGui_ImplSDL3_ProcessEvent(&event);
+
+			ImGuiIO& io = ImGui::GetIO();
+
+			if (io.WantCaptureMouse) continue;
+			if (io.WantCaptureKeyboard) continue;
+
 			isRunning = event.type != SDL_EVENT_QUIT;
 
 			switch (event.type)
@@ -157,12 +167,10 @@ int main()
 				material->SetUniform<wgpu::CameraData>(bindingColor, camera->GetCameraData());
 				sprite.GetMaterial()->SetUniform<wgpu::CameraData>(bindingSprite, camera->GetCameraData());
 				break;
-
-			case SDL_EVENT_KEY_UP:
-				invertColors = event.key.key == SDLK_SPACE;
-				break;
 			}
 		}
+
+		
 
 		renderer.BeginFrame();
 		{
@@ -204,17 +212,30 @@ int main()
 			renderer.BatchMesh(sprite.GetMaterial(), mesh);
 		}
 		renderer.EndFrame();
+
+		renderer.GuiBeginFrame();
 		{
-			// just to show that multiple effects can be layered
-			if (invertColors)
+			ImGui::Begin("Renderer");
 			{
-				renderer.SubmitPostProcessingEffect(&ppMaterial);
-				renderer.SubmitPostProcessingEffect(&ppMaterial);
-				renderer.SubmitPostProcessingEffect(&ppMaterial);
-				renderer.SubmitPostProcessingEffect(&ppMaterial);
-				renderer.SubmitPostProcessingEffect(&ppMaterial);
+				if (ImGui::RadioButton("Post Processing Effects", invertColors))
+				{
+					invertColors = !invertColors;
+				}
 			}
+			ImGui::End();
 		}
+		renderer.GuiEndFrame();
+		
+		// just to show that multiple effects can be layered
+		if (invertColors)
+		{
+			renderer.SubmitPostProcessingEffect(&ppMaterial);
+			renderer.SubmitPostProcessingEffect(&ppMaterial);
+			renderer.SubmitPostProcessingEffect(&ppMaterial);
+			renderer.SubmitPostProcessingEffect(&ppMaterial);
+			renderer.SubmitPostProcessingEffect(&ppMaterial);
+		}
+		
 		renderer.Render();
 	}
 

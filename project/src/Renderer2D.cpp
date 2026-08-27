@@ -7,20 +7,15 @@
 #include "RenderQueue.h"
 #include "BuiltinResources.h"
 
-#define IMGUI_IMPL_WEBGPU_BACKEND_WGPU
-//#define IMGUI_IMPL_WEBGPU_BACKEND_DAWN
-//#define IMGUI_IMPL_WEBGPU_BACKEND_WGVK
 #include <imgui.h>
+#include <backends/imgui_impl_wgpu.h>
+#include <backends/imgui_impl_sdl3.h>
 
 wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 	: m_Camera{ std::make_shared<wgpu::Camera2D>() }
 	, m_Context{ std::make_unique<GraphicsContext>(window) }
 	, m_RenderQueue{ std::make_unique<RenderQueue>() }
 {
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::GetIO();
-
 	InitDepthBuffer();
 	CreateVertexBuffer(100 * sizeof(Vertex3D));
 	CreateIndexBuffer(100 * sizeof(uint32_t));
@@ -29,10 +24,12 @@ wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 	m_BuiltinResources = std::make_unique<BuiltinResources>(*this);
 
 	InitPostProcessingData();
+	ImGuiInit();
 }
 
 wgpu::Renderer2D::~Renderer2D() noexcept
 {
+	ImGuiQuit();
 	wgpuBufferRelease(m_Vertex.buffer);
 	m_Vertex.buffer = nullptr;
 
@@ -42,6 +39,18 @@ wgpu::Renderer2D::~Renderer2D() noexcept
 	ReleaseDepthBuffer();
 
 	DestroyPostProcessingData();
+}
+
+void wgpu::Renderer2D::BatchMesh(Material* material, const Mesh3D& mesh) const
+{
+	m_RenderQueue->SubmitMesh(material, mesh);
+}
+
+void wgpu::Renderer2D::SubmitPostProcessingEffect(Material* material)
+{
+	if (material == nullptr) return;
+
+	m_PostEffects.push_back(material);
 }
 
 void wgpu::Renderer2D::BeginFrame()
@@ -68,11 +77,6 @@ void wgpu::Renderer2D::BeginFrame()
 	wgpuCommandEncoderRelease(encoder);
 }
 
-void wgpu::Renderer2D::BatchMesh(Material* material, const Mesh3D& mesh) const
-{
-	m_RenderQueue->SubmitMesh(material, mesh);
-}
-
 void wgpu::Renderer2D::EndFrame()
 {
 	if (m_Context->IsWindowMinimized()) return;
@@ -92,11 +96,16 @@ void wgpu::Renderer2D::EndFrame()
 	m_PostEffects.clear();
 }
 
-void wgpu::Renderer2D::SubmitPostProcessingEffect(Material* material)
+void wgpu::Renderer2D::GuiBeginFrame()
 {
-	if (material == nullptr) return;
+	ImGui_ImplWGPU_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
+	ImGui::NewFrame();
+}
 
-	m_PostEffects.push_back(material);
+void wgpu::Renderer2D::GuiEndFrame()
+{
+	ImGui::EndFrame();
 }
 
 void wgpu::Renderer2D::Render() const
@@ -155,6 +164,8 @@ void wgpu::Renderer2D::Render() const
 		}
 	}
 
+	RenderGui(targetView, encoder);
+
 	// finish encoding
 	WGPUCommandBuffer commandBuffer = wgpuCommandEncoderFinish(encoder, nullptr);
 	wgpuCommandEncoderRelease(encoder);
@@ -203,6 +214,29 @@ std::shared_ptr<wgpu::Camera2D> wgpu::Renderer2D::GetCamera() const
 wgpu::Material* wgpu::Renderer2D::GetSolidColorMaterial() const
 {
 	return m_BuiltinResources->GetSolidColorMaterial();
+}
+
+void wgpu::Renderer2D::ImGuiInit()
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::GetIO();
+
+	ImGui_ImplSDL3_InitForOther(m_Context->GetWindow());
+
+	ImGui_ImplWGPU_InitInfo info{};
+	info.Device = m_Context->GetDevice();
+	info.NumFramesInFlight = 3;
+	info.DepthStencilFormat = wgpuTextureGetFormat(m_DepthTexture);
+	info.RenderTargetFormat = m_Context->GetSurfaceFormat();
+
+	ImGui_ImplWGPU_Init(&info);
+}
+
+void wgpu::Renderer2D::ImGuiQuit()
+{
+	ImGui_ImplSDL3_Shutdown();
+	ImGui_ImplWGPU_Shutdown();
 }
 
 void wgpu::Renderer2D::RenderObjects(WGPUTextureView targetView, WGPUCommandEncoder encoder) const
@@ -287,10 +321,57 @@ void wgpu::Renderer2D::RenderPostEffect(Material* effect, WGPUTextureView target
 	wgpuRenderPassEncoderRelease(renderPass);
 }
 
+void wgpu::Renderer2D::RenderGui(WGPUTextureView targetView, WGPUCommandEncoder encoder) const
+{
+	ImGui::Render();
+
+	// describe render pass
+	WGPURenderPassDescriptor renderPassDesc{};
+	renderPassDesc.nextInChain = nullptr;
+	renderPassDesc.depthStencilAttachment = nullptr;
+	renderPassDesc.timestampWrites = nullptr;
+
+	WGPURenderPassColorAttachment renderPassColorAttachment{};
+	renderPassColorAttachment.view = targetView;
+	renderPassColorAttachment.resolveTarget = nullptr;
+	renderPassColorAttachment.loadOp = WGPULoadOp_Load;
+	renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
+	renderPassColorAttachment.clearValue = { m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a };
+	renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
+
+	renderPassDesc.colorAttachmentCount = 1;
+	renderPassDesc.colorAttachments = &renderPassColorAttachment;
+
+	// Setup depth/stencil
+	WGPURenderPassDepthStencilAttachment depthStencilAttachment{};
+
+	depthStencilAttachment.view = m_DepthTextureView;
+	depthStencilAttachment.depthClearValue = 1.f;
+	depthStencilAttachment.depthLoadOp = WGPULoadOp_Clear;
+	depthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
+	depthStencilAttachment.depthReadOnly = false;
+
+	// Stencil setup, mandatory but unused
+	depthStencilAttachment.stencilClearValue = 0;
+	depthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
+	depthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
+	depthStencilAttachment.stencilReadOnly = true;
+
+	renderPassDesc.depthStencilAttachment = &depthStencilAttachment;
+
+	WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
+
+	ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), renderPass);
+
+	// end renderpass
+	wgpuRenderPassEncoderEnd(renderPass);
+	wgpuRenderPassEncoderRelease(renderPass);
+}
+
 std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceViewData() const
 {
 	WGPUTextureView view{ nullptr };
-	WGPUSurfaceTexture surfaceTexture{ nullptr };
+	WGPUSurfaceTexture surfaceTexture{};
 
 	wgpuSurfaceGetCurrentTexture(m_Context->GetSurface(), &surfaceTexture);
 

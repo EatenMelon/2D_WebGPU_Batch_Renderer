@@ -53,6 +53,8 @@ find_package(SDL3_image REQUIRED GLOBAL)
 add_subdirectory("${LIB_DIR}/webgpu")
 add_subdirectory("${LIB_DIR}/sdl3webgpu")
 
+add_compile_definitions(IMGUI_IMPL_WEBGPU_BACKEND_WGPU)
+
 # ImGui
 set(IMGUI_DIR "${LIB_DIR}/imgui")
 add_library(imgui STATIC

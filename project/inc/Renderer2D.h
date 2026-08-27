@@ -28,11 +28,14 @@ namespace wgpu
 		Renderer2D(Renderer2D&&) = delete;
 		Renderer2D& operator=(Renderer2D&&) = delete;
 
-		void BeginFrame();
 		void BatchMesh(Material* material, const Mesh3D& mesh) const;
+		void SubmitPostProcessingEffect(Material* material);
+
+		void BeginFrame();
 		void EndFrame();
 
-		void SubmitPostProcessingEffect(Material* material);
+		void GuiBeginFrame();
+		void GuiEndFrame();
 
 		void Render() const;
 
@@ -51,6 +54,9 @@ namespace wgpu
 		Material* GetSolidColorMaterial() const;
 
 	private:
+		void ImGuiInit();
+		void ImGuiQuit();
+
 		// additional render resources
 		ColorF m_ClearColor{ 0.f, 0.f, 0.f, 1.f };
 		std::shared_ptr<Camera2D> m_Camera{ nullptr };
@@ -59,6 +65,7 @@ namespace wgpu
 		// rendering tasks
 		void RenderObjects(WGPUTextureView targetView, WGPUCommandEncoder encoder) const;
 		void RenderPostEffect(Material* effect, WGPUTextureView targetView, WGPUCommandEncoder encoder) const;
+		void RenderGui(WGPUTextureView targetView, WGPUCommandEncoder encoder) const;
 
 		// surface view
 		std::pair<WGPUSurfaceTexture, WGPUTextureView> GetNextSurfaceViewData() const;
