@@ -1,16 +1,26 @@
 #include <Renderer2D.h>
 
 #include <Material.h>
+#include <BindGroupLayout.h>
+
 #include "GraphicsContext.h"
 #include "RenderQueue.h"
 #include "BuiltinResources.h"
-#include <BindGroupLayout.h>
+
+#define IMGUI_IMPL_WEBGPU_BACKEND_WGPU
+//#define IMGUI_IMPL_WEBGPU_BACKEND_DAWN
+//#define IMGUI_IMPL_WEBGPU_BACKEND_WGVK
+#include <imgui.h>
 
 wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 	: m_Camera{ std::make_shared<wgpu::Camera2D>() }
 	, m_Context{ std::make_unique<GraphicsContext>(window) }
 	, m_RenderQueue{ std::make_unique<RenderQueue>() }
 {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::GetIO();
+
 	InitDepthBuffer();
 	CreateVertexBuffer(100 * sizeof(Vertex3D));
 	CreateIndexBuffer(100 * sizeof(uint32_t));

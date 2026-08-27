@@ -28,7 +28,7 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 # need this for fetching
-add_library(Renderer2D::Renderer2D ALIAS Renderer2D)
+add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS ${PROJECT_NAME})
 
 # include directories
 set(LIB_DIR "project/lib")
@@ -53,11 +53,38 @@ find_package(SDL3_image REQUIRED GLOBAL)
 add_subdirectory("${LIB_DIR}/webgpu")
 add_subdirectory("${LIB_DIR}/sdl3webgpu")
 
+# ImGui
+set(IMGUI_DIR "${LIB_DIR}/imgui")
+add_library(imgui STATIC
+    "${IMGUI_DIR}/backends/imgui_impl_wgpu.h"
+    "${IMGUI_DIR}/backends/imgui_impl_wgpu.cpp"
+    "${IMGUI_DIR}/backends/imgui_impl_sdl3.h"
+    "${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp"
+
+    "${IMGUI_DIR}/misc/cpp/imgui_stdlib.h"
+    "${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp"
+
+    "${IMGUI_DIR}/imconfig.h"
+    "${IMGUI_DIR}/imgui.h"
+    "${IMGUI_DIR}/imgui.cpp"
+    "${IMGUI_DIR}/imgui_draw.cpp"
+    "${IMGUI_DIR}/imgui_internal.h"
+    "${IMGUI_DIR}/imgui_tables.cpp"
+    "${IMGUI_DIR}/imgui_widgets.cpp"
+    "${IMGUI_DIR}/imstb_rectpack.h"
+    "${IMGUI_DIR}/imstb_textedit.h"
+    "${IMGUI_DIR}/imstb_truetype.h"
+)
+
+target_include_directories(imgui PUBLIC ${IMGUI_DIR})
+target_link_libraries(imgui PUBLIC webgpu SDL3::SDL3)
+
 target_link_libraries(${PROJECT_NAME} PUBLIC
 	webgpu
 	SDL3::SDL3
 	SDL3_image::SDL3_image
 	sdl3webgpu
+	imgui
 )
 
 # set warning level to 4 and make warnings cause errors
