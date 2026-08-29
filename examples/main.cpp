@@ -169,9 +169,7 @@ int main()
 				break;
 			}
 		}
-
 		
-
 		renderer.BeginFrame();
 		{
 			float time = SDL_GetTicks() / 1000.f;

@@ -40,9 +40,9 @@ namespace wgpu
 		void Render() const;
 
 		void SetClearColor(const ColorF& color);
-		void SetCamera(const std::shared_ptr<Camera2D>& camera);
 		void Resize();
 
+		void SetCamera(const std::shared_ptr<Camera2D>& camera);
 		std::shared_ptr<Camera2D> GetCamera() const;
 
 		WGPUTexture GetDepthTexture() const { return m_DepthTexture; }
@@ -57,50 +57,26 @@ namespace wgpu
 		void ImGuiInit();
 		void ImGuiQuit();
 
-		// additional render resources
-		ColorF m_ClearColor{ 0.f, 0.f, 0.f, 1.f };
-		std::shared_ptr<Camera2D> m_Camera{ nullptr };
-		std::unique_ptr<BuiltinResources> m_BuiltinResources{ nullptr };
-
-		// rendering tasks
-		void RenderObjects(WGPUTextureView targetView, WGPUCommandEncoder encoder) const;
-		void RenderPostEffect(Material* effect, WGPUTextureView targetView, WGPUCommandEncoder encoder) const;
-		void RenderGui(WGPUTextureView targetView, WGPUCommandEncoder encoder) const;
-
-		// surface view
-		std::pair<WGPUSurfaceTexture, WGPUTextureView> GetNextSurfaceViewData() const;
-
-		// depth buffer
 		void InitDepthBuffer();
 		void ReleaseDepthBuffer();
 
-		WGPUTexture m_DepthTexture{ nullptr };
-		WGPUTextureView m_DepthTextureView{ nullptr };
+		void InitPostProcessingData();
+		void DestroyPostProcessingData();
 
-		// buffers
 		void CreateVertexBuffer(size_t capacity);
 		void CreateIndexBuffer(size_t capacity);
+		
+		std::pair<WGPUSurfaceTexture, WGPUTextureView> GetNextSurfaceViewData() const;
+
+		void RenderObjects(WGPUTextureView targetView, WGPUCommandEncoder encoder) const;
+		void RenderPostEffect(Material* effect, WGPUTextureView targetView, WGPUCommandEncoder encoder) const;
+		void RenderGui(WGPUTextureView targetView, WGPUCommandEncoder encoder) const;
 
 		struct Buffer
 		{
 			WGPUBuffer buffer{ nullptr };
 			size_t capacity{};
 		};
-
-		Buffer m_Vertex{};
-		Buffer m_Index{};
-
-		// render info
-		std::unique_ptr<GraphicsContext> m_Context{ nullptr };
-
-		// batch management
-		std::unique_ptr<RenderQueue> m_RenderQueue{ nullptr };
-		std::vector<Material*> m_PostEffects{ nullptr };
-
-		// post processing
-		void InitPostProcessingData();
-		void DestroyPostProcessingData();
-
 		struct PostProcessingData
 		{
 			WGPUTextureView pingView{ nullptr };
@@ -109,7 +85,24 @@ namespace wgpu
 			WGPUTexture pongTexture{ nullptr };
 		};
 
+		// still not sure if the camera should be in the renderer
+		std::shared_ptr<Camera2D> m_Camera{ nullptr };
+
+		ColorF m_ClearColor{ 0.f, 0.f, 0.f, 1.f };
+
+		WGPUTexture m_DepthTexture{ nullptr };
+		WGPUTextureView m_DepthTextureView{ nullptr };
 		PostProcessingData m_PPData{};
+
+		Buffer m_Vertex{};
+		Buffer m_Index{};
+
+		std::unique_ptr<RenderQueue> m_RenderQueue{ nullptr };
+		std::vector<Material*> m_PostEffects{ nullptr };
+
+
+		std::unique_ptr<GraphicsContext> m_Context{ nullptr };
+		std::unique_ptr<BuiltinResources> m_BuiltinResources{ nullptr };
 	};
 }
 

@@ -13,14 +13,15 @@
 
 wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 	: m_Camera{ std::make_shared<wgpu::Camera2D>() }
-	, m_Context{ std::make_unique<GraphicsContext>(window) }
 	, m_RenderQueue{ std::make_unique<RenderQueue>() }
+	, m_Context{ std::make_unique<GraphicsContext>(window) }
 {
 	InitDepthBuffer();
 	CreateVertexBuffer(100 * sizeof(Vertex3D));
-	CreateIndexBuffer(100 * sizeof(uint32_t));
+	CreateIndexBuffer(50 * sizeof(uint32_t));
 
 	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
+
 	m_BuiltinResources = std::make_unique<BuiltinResources>(*this);
 
 	InitPostProcessingData();
@@ -186,12 +187,6 @@ void wgpu::Renderer2D::SetClearColor(const ColorF& color)
 	m_ClearColor = color;
 }
 
-void wgpu::Renderer2D::SetCamera(const std::shared_ptr<Camera2D>& camera)
-{
-	m_Camera = camera;
-	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
-}
-
 void wgpu::Renderer2D::Resize()
 {
 	m_Context->DestroySurface();
@@ -203,6 +198,12 @@ void wgpu::Renderer2D::Resize()
 	DestroyPostProcessingData();
 	InitPostProcessingData();
 
+	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
+}
+
+void wgpu::Renderer2D::SetCamera(const std::shared_ptr<Camera2D>& camera)
+{
+	m_Camera = camera;
 	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
 }
 
@@ -237,6 +238,145 @@ void wgpu::Renderer2D::ImGuiQuit()
 {
 	ImGui_ImplSDL3_Shutdown();
 	ImGui_ImplWGPU_Shutdown();
+}
+
+void wgpu::Renderer2D::InitDepthBuffer()
+{
+	WGPUTextureFormat depthTextureFormat = WGPUTextureFormat_Depth24Plus;
+
+	// Create the depth texture
+	WGPUTextureDescriptor textureDesc{};
+	textureDesc.dimension = WGPUTextureDimension_2D;
+	textureDesc.format = depthTextureFormat;
+	textureDesc.mipLevelCount = 1;
+	textureDesc.sampleCount = 1;
+
+	glm::u32vec2 size = m_Context->GetWindowSize();
+	textureDesc.size = { size.x, size.y, 1 };
+
+	textureDesc.usage = WGPUTextureUsage_RenderAttachment;
+	textureDesc.viewFormatCount = 1;
+	textureDesc.viewFormats = &depthTextureFormat;
+	m_DepthTexture = wgpuDeviceCreateTexture(m_Context->GetDevice(), &textureDesc);
+
+	WGPUTextureViewDescriptor viewDesc{};
+	viewDesc.aspect = WGPUTextureAspect_DepthOnly;
+	viewDesc.baseArrayLayer = 0;
+	viewDesc.arrayLayerCount = 1;
+	viewDesc.baseMipLevel = 0;
+	viewDesc.mipLevelCount = 1;
+	viewDesc.dimension = WGPUTextureViewDimension_2D;
+	viewDesc.format = depthTextureFormat;
+	m_DepthTextureView = wgpuTextureCreateView(m_DepthTexture, &viewDesc);
+}
+
+void wgpu::Renderer2D::ReleaseDepthBuffer()
+{
+	wgpuTextureViewRelease(m_DepthTextureView);
+	wgpuTextureDestroy(m_DepthTexture);
+	wgpuTextureRelease(m_DepthTexture);
+}
+
+void wgpu::Renderer2D::InitPostProcessingData()
+{
+	const auto windowSize = m_Context->GetWindowSize();
+
+	WGPUTextureDescriptor texDesc{};
+	texDesc.nextInChain = nullptr;
+	texDesc.format = m_Context->GetSurfaceFormat();
+	texDesc.dimension = WGPUTextureDimension_2D;
+	texDesc.sampleCount = 1;
+	texDesc.mipLevelCount = 1;
+	texDesc.size.width = static_cast<uint32_t>(windowSize.x);
+	texDesc.size.height = static_cast<uint32_t>(windowSize.y);
+	texDesc.size.depthOrArrayLayers = 1;
+	texDesc.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
+
+	m_PPData.pongTexture = wgpuDeviceCreateTexture(GetContext()->GetDevice(), &texDesc);
+	m_PPData.pingTexture = wgpuDeviceCreateTexture(GetContext()->GetDevice(), &texDesc);
+
+	WGPUTextureViewDescriptor viewDesc{};
+	viewDesc.nextInChain = nullptr;
+	viewDesc.format = m_Context->GetSurfaceFormat();
+	viewDesc.dimension = WGPUTextureViewDimension_2D;
+	viewDesc.baseMipLevel = 0;
+	viewDesc.mipLevelCount = 1;
+	viewDesc.baseArrayLayer = 0;
+	viewDesc.arrayLayerCount = 1;
+	viewDesc.aspect = WGPUTextureAspect_All;
+	viewDesc.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
+
+	m_PPData.pingView = wgpuTextureCreateView(m_PPData.pingTexture, &viewDesc);
+	m_PPData.pongView = wgpuTextureCreateView(m_PPData.pongTexture, &viewDesc);
+}
+
+void wgpu::Renderer2D::DestroyPostProcessingData()
+{
+	wgpuTextureRelease(m_PPData.pingTexture);
+	wgpuTextureRelease(m_PPData.pongTexture);
+	wgpuTextureViewRelease(m_PPData.pingView);
+	wgpuTextureViewRelease(m_PPData.pongView);
+}
+
+void wgpu::Renderer2D::CreateVertexBuffer(size_t capacity)
+{
+	WGPUBufferDescriptor desc{};
+	desc.size = capacity;
+	desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex;
+	desc.mappedAtCreation = false;
+
+	if (m_Vertex.buffer != nullptr)
+	{
+		wgpuBufferRelease(m_Vertex.buffer);
+	}
+
+	m_Vertex.buffer = wgpuDeviceCreateBuffer(m_Context->GetDevice(), &desc);
+	m_Vertex.capacity = capacity;
+}
+
+void wgpu::Renderer2D::CreateIndexBuffer(size_t capacity)
+{
+	WGPUBufferDescriptor desc{};
+	desc.size = capacity;
+	desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Index;
+	desc.mappedAtCreation = false;
+
+	if (m_Index.buffer != nullptr)
+	{
+		wgpuBufferRelease(m_Index.buffer);
+	}
+
+	m_Index.buffer = wgpuDeviceCreateBuffer(m_Context->GetDevice(), &desc);
+	m_Index.capacity = capacity;
+}
+
+std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceViewData() const
+{
+	WGPUTextureView view{ nullptr };
+	WGPUSurfaceTexture surfaceTexture{};
+
+	wgpuSurfaceGetCurrentTexture(m_Context->GetSurface(), &surfaceTexture);
+
+	if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
+	{
+		return { surfaceTexture, view };
+	}
+
+	WGPUTextureViewDescriptor viewDescriptor;
+	viewDescriptor.nextInChain = nullptr;
+	viewDescriptor.label = WGPUStringView("Surface texture view");
+	viewDescriptor.format = wgpuTextureGetFormat(surfaceTexture.texture);
+	viewDescriptor.dimension = WGPUTextureViewDimension_2D;
+	viewDescriptor.baseMipLevel = 0;
+	viewDescriptor.mipLevelCount = 1;
+	viewDescriptor.baseArrayLayer = 0;
+	viewDescriptor.arrayLayerCount = 1;
+	viewDescriptor.aspect = WGPUTextureAspect_All;
+	viewDescriptor.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
+
+	view = wgpuTextureCreateView(surfaceTexture.texture, &viewDescriptor);
+
+	return { surfaceTexture, view };
 }
 
 void wgpu::Renderer2D::RenderObjects(WGPUTextureView targetView, WGPUCommandEncoder encoder) const
@@ -323,6 +463,8 @@ void wgpu::Renderer2D::RenderPostEffect(Material* effect, WGPUTextureView target
 
 void wgpu::Renderer2D::RenderGui(WGPUTextureView targetView, WGPUCommandEncoder encoder) const
 {
+	if (ImGui::GetFrameCount() <= 0) return;
+
 	ImGui::Render();
 
 	// describe render pass
@@ -368,141 +510,3 @@ void wgpu::Renderer2D::RenderGui(WGPUTextureView targetView, WGPUCommandEncoder 
 	wgpuRenderPassEncoderRelease(renderPass);
 }
 
-std::pair<WGPUSurfaceTexture, WGPUTextureView> wgpu::Renderer2D::GetNextSurfaceViewData() const
-{
-	WGPUTextureView view{ nullptr };
-	WGPUSurfaceTexture surfaceTexture{};
-
-	wgpuSurfaceGetCurrentTexture(m_Context->GetSurface(), &surfaceTexture);
-
-	if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
-	{
-		return { surfaceTexture, view };
-	}
-
-	WGPUTextureViewDescriptor viewDescriptor;
-	viewDescriptor.nextInChain = nullptr;
-	viewDescriptor.label = WGPUStringView("Surface texture view");
-	viewDescriptor.format = wgpuTextureGetFormat(surfaceTexture.texture);
-	viewDescriptor.dimension = WGPUTextureViewDimension_2D;
-	viewDescriptor.baseMipLevel = 0;
-	viewDescriptor.mipLevelCount = 1;
-	viewDescriptor.baseArrayLayer = 0;
-	viewDescriptor.arrayLayerCount = 1;
-	viewDescriptor.aspect = WGPUTextureAspect_All;
-	viewDescriptor.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
-
-	view = wgpuTextureCreateView(surfaceTexture.texture, &viewDescriptor);
-
-	return { surfaceTexture, view };
-}
-
-void wgpu::Renderer2D::InitDepthBuffer()
-{
-	WGPUTextureFormat depthTextureFormat = WGPUTextureFormat_Depth24Plus;
-
-	// Create the depth texture
-	WGPUTextureDescriptor textureDesc{};
-	textureDesc.dimension = WGPUTextureDimension_2D;
-	textureDesc.format = depthTextureFormat;
-	textureDesc.mipLevelCount = 1;
-	textureDesc.sampleCount = 1;
-
-	glm::u32vec2 size = m_Context->GetWindowSize();
-	textureDesc.size = { size.x, size.y, 1 };
-
-	textureDesc.usage = WGPUTextureUsage_RenderAttachment;
-	textureDesc.viewFormatCount = 1;
-	textureDesc.viewFormats = &depthTextureFormat;
-	m_DepthTexture = wgpuDeviceCreateTexture(m_Context->GetDevice(), &textureDesc);
-
-	WGPUTextureViewDescriptor viewDesc{};
-	viewDesc.aspect = WGPUTextureAspect_DepthOnly;
-	viewDesc.baseArrayLayer = 0;
-	viewDesc.arrayLayerCount = 1;
-	viewDesc.baseMipLevel = 0;
-	viewDesc.mipLevelCount = 1;
-	viewDesc.dimension = WGPUTextureViewDimension_2D;
-	viewDesc.format = depthTextureFormat;
-	m_DepthTextureView = wgpuTextureCreateView(m_DepthTexture, &viewDesc);
-}
-
-void wgpu::Renderer2D::ReleaseDepthBuffer()
-{
-	wgpuTextureViewRelease(m_DepthTextureView);
-	wgpuTextureDestroy(m_DepthTexture);
-	wgpuTextureRelease(m_DepthTexture);
-}
-
-void wgpu::Renderer2D::CreateVertexBuffer(size_t capacity)
-{
-	WGPUBufferDescriptor desc{};
-	desc.size = capacity;
-	desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex;
-	desc.mappedAtCreation = false;
-
-	if (m_Vertex.buffer != nullptr)
-	{
-		wgpuBufferRelease(m_Vertex.buffer);
-	}
-
-	m_Vertex.buffer = wgpuDeviceCreateBuffer(m_Context->GetDevice(), &desc);
-	m_Vertex.capacity = capacity;
-}
-
-void wgpu::Renderer2D::CreateIndexBuffer(size_t capacity)
-{
-	WGPUBufferDescriptor desc{};
-	desc.size = capacity;
-	desc.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Index;
-	desc.mappedAtCreation = false;
-
-	if (m_Index.buffer != nullptr)
-	{
-		wgpuBufferRelease(m_Index.buffer);
-	}
-
-	m_Index.buffer = wgpuDeviceCreateBuffer(m_Context->GetDevice(), &desc);
-	m_Index.capacity = capacity;
-}
-
-void wgpu::Renderer2D::InitPostProcessingData()
-{
-	const auto windowSize = m_Context->GetWindowSize();
-
-	WGPUTextureDescriptor texDesc{};
-	texDesc.nextInChain = nullptr;
-	texDesc.format = m_Context->GetSurfaceFormat();
-	texDesc.dimension = WGPUTextureDimension_2D;
-	texDesc.sampleCount = 1;
-	texDesc.mipLevelCount = 1;
-	texDesc.size.width = static_cast<uint32_t>(windowSize.x);
-	texDesc.size.height = static_cast<uint32_t>(windowSize.y);
-	texDesc.size.depthOrArrayLayers = 1;
-	texDesc.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
-
-	m_PPData.pongTexture = wgpuDeviceCreateTexture(GetContext()->GetDevice(), &texDesc);
-	m_PPData.pingTexture = wgpuDeviceCreateTexture(GetContext()->GetDevice(), &texDesc);
-
-	WGPUTextureViewDescriptor viewDesc{};
-	viewDesc.nextInChain = nullptr;
-	viewDesc.format = m_Context->GetSurfaceFormat();
-	viewDesc.dimension = WGPUTextureViewDimension_2D;
-	viewDesc.baseMipLevel = 0;
-	viewDesc.mipLevelCount = 1;
-	viewDesc.baseArrayLayer = 0;
-	viewDesc.arrayLayerCount = 1;
-	viewDesc.aspect = WGPUTextureAspect_All;
-	viewDesc.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
-
-	m_PPData.pingView = wgpuTextureCreateView(m_PPData.pingTexture, &viewDesc);
-	m_PPData.pongView = wgpuTextureCreateView(m_PPData.pongTexture, &viewDesc);
-}
-
-void wgpu::Renderer2D::DestroyPostProcessingData()
-{
-	wgpuTextureRelease(m_PPData.pingTexture);
-	wgpuTextureRelease(m_PPData.pongTexture);
-	wgpuTextureViewRelease(m_PPData.pingView);
-	wgpuTextureViewRelease(m_PPData.pongView);
-}
