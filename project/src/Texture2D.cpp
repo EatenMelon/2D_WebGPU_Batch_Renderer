@@ -108,7 +108,13 @@ void wgpu::Texture2D::SelectSampler(Sampler::Preset preset)
 
 wgpu::RectF wgpu::Texture2D::GetCutout(const RectF& src) const
 {
-	return RectF{ src.pos / m_Size, src.size / m_Size };
+	return RectF
+	{
+		src.left / m_Size.x,
+		src.bottom / m_Size.y,
+		src.width / m_Size.x,
+		src.height / m_Size.y
+	};
 }
 
 glm::vec2 wgpu::Texture2D::GetSize() const

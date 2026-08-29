@@ -21,11 +21,11 @@ namespace wgpu
 	{
 		RectF() = default;
 		RectF(float left, float bottom, float width, float height);
-		RectF(const glm::vec2& pos, const glm::vec2& size);
-		RectF(const glm::vec2& pos, float size);
 
-		glm::vec2 pos{};
-		glm::vec2 size{};
+		float left{};
+		float bottom{};
+		float width{};
+		float height{};
 	};
 
 	struct Vertex3D
