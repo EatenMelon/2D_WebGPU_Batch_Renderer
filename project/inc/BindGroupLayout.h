@@ -49,9 +49,9 @@ namespace wgpu
 		const GraphicsContext* GetContext() const { return m_Context; }
 
 	private:
-		typedef std::pair<std::type_index, WGPUBindGroupLayoutEntry> UniformEntry;
-
 		WGPUShaderStage GetShaderStage(BindingVisibility visibility);
+
+		typedef std::pair<std::type_index, WGPUBindGroupLayoutEntry> UniformEntry;
 
 		WGPUBindGroupLayout m_BindGroupLayout{ nullptr };
 

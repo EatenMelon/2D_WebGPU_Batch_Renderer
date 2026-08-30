@@ -111,16 +111,17 @@ int main()
 	wgpu::Renderer2D renderer{ window };
 	
 	// render resources
-	auto camera = renderer.GetCamera();
-	camera->SetAspectRatio(800.f / 600.f);
+	wgpu::Camera2D camera{};
+	camera.SetAspectRatio(static_cast<float>(size.x) / size.y);
 
 	wgpu::Texture2D sprite{ renderer, "resources/Sprite.png" };
 	auto material = renderer.GetSolidColorMaterial();
+
 	const int bindingColor = material->GetUniformBinding<wgpu::CameraData>();
-	material->SetUniform<wgpu::CameraData>(bindingColor, camera->GetCameraData());
+	material->SetUniform<wgpu::CameraData>(bindingColor, camera.GetCameraData());
 
 	const int bindingSprite = sprite.GetMaterial()->GetUniformBinding<wgpu::CameraData>();
-	sprite.GetMaterial()->SetUniform<wgpu::CameraData>(bindingColor, camera->GetCameraData());
+	sprite.GetMaterial()->SetUniform<wgpu::CameraData>(bindingColor, camera.GetCameraData());
 
 	wgpu::Shader ppShader{ renderer, "resources/PostInverse.wgsl" };
 	wgpu::BindGroupLayout ppLayout{};
@@ -149,24 +150,29 @@ int main()
 
 			isRunning = event.type != SDL_EVENT_QUIT;
 
+			bool updateMaterials{ false };
 			switch (event.type)
 			{
 			case SDL_EVENT_WINDOW_RESIZED:
 				renderer.Resize();
-				material->SetUniform<wgpu::CameraData>(bindingColor, camera->GetCameraData());
-				sprite.GetMaterial()->SetUniform<wgpu::CameraData>(bindingSprite, camera->GetCameraData());
+				camera.SetAspectRatio(static_cast<float>(event.window.data1) / event.window.data2);
+				updateMaterials = true;
 				break;
 
 			case SDL_EVENT_MOUSE_MOTION:
 				if (event.motion.state & SDL_BUTTON_LEFT)
 				{
 					const glm::vec2 motion{ -event.motion.xrel, event.motion.yrel };
-
-					camera->Move(motion / 1000.f);
+					camera.Move(motion / 1000.f);
+					updateMaterials = true;
 				}
-				material->SetUniform<wgpu::CameraData>(bindingColor, camera->GetCameraData());
-				sprite.GetMaterial()->SetUniform<wgpu::CameraData>(bindingSprite, camera->GetCameraData());
 				break;
+			}
+
+			if (updateMaterials)
+			{
+				material->SetUniform<wgpu::CameraData>(bindingColor, camera.GetCameraData());
+				sprite.GetMaterial()->SetUniform<wgpu::CameraData>(bindingSprite, camera.GetCameraData());
 			}
 		}
 		

@@ -12,15 +12,12 @@
 #include <backends/imgui_impl_sdl3.h>
 
 wgpu::Renderer2D::Renderer2D(SDL_Window* window)
-	: m_Camera{ std::make_shared<wgpu::Camera2D>() }
-	, m_RenderQueue{ std::make_unique<RenderQueue>() }
+	: m_RenderQueue{ std::make_unique<RenderQueue>() }
 	, m_Context{ std::make_unique<GraphicsContext>(window) }
 {
 	InitDepthBuffer();
 	CreateVertexBuffer(100 * sizeof(Vertex3D));
 	CreateIndexBuffer(50 * sizeof(uint32_t));
-
-	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
 
 	m_BuiltinResources = std::make_unique<BuiltinResources>(*this);
 
@@ -198,18 +195,7 @@ void wgpu::Renderer2D::Resize()
 	DestroyPostProcessingData();
 	InitPostProcessingData();
 
-	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
-}
-
-void wgpu::Renderer2D::SetCamera(const std::shared_ptr<Camera2D>& camera)
-{
-	m_Camera = camera;
-	m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
-}
-
-std::shared_ptr<wgpu::Camera2D> wgpu::Renderer2D::GetCamera() const
-{
-	return m_Camera;
+	//m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
 }
 
 wgpu::Material* wgpu::Renderer2D::GetSolidColorMaterial() const

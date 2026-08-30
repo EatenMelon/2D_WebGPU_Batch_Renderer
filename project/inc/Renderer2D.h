@@ -42,9 +42,6 @@ namespace wgpu
 		void SetClearColor(const ColorF& color);
 		void Resize();
 
-		void SetCamera(const std::shared_ptr<Camera2D>& camera);
-		std::shared_ptr<Camera2D> GetCamera() const;
-
 		WGPUTexture GetDepthTexture() const { return m_DepthTexture; }
 
 		const GraphicsContext* GetContext() const { return m_Context.get(); }
@@ -84,9 +81,6 @@ namespace wgpu
 			WGPUTexture pingTexture{ nullptr };
 			WGPUTexture pongTexture{ nullptr };
 		};
-
-		// still not sure if the camera should be in the renderer
-		std::shared_ptr<Camera2D> m_Camera{ nullptr };
 
 		ColorF m_ClearColor{ 0.f, 0.f, 0.f, 1.f };
 
