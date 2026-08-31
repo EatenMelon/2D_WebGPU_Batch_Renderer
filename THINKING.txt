@@ -96,3 +96,42 @@ So i'll have to be more carefull while iterating over batches in the renderQueue
 
 (the renderqueue can handle about 6'720'048 vertices atm, so it should be fine for now)
 famous last words: "I'll fix it later!"
+
+--- more uniform ---
+
+right now i can bind one uniform per material/shader/pipeline/bindgroup, this forces the user to make a struct which
+packs all the data they want to use in the shader together into one struct.
+
+But, i don't pass a variable to the shader, i pass a buffer, and frankly, all i need is the pointer adn size of the variable,
+so i could make things a lot simpler while also adding the possability of passing multiple uniforms to
+the shader while also still having wone uniform binding.
+
+right now i have this as the general uniform struct:
+
+struct Uniform
+{
+	std::any any{};
+	size_t size{};
+	int binding{};
+	std::function<void* (std::any&)> GetData{};
+};
+
+i'm thinking of changing it to this:
+
+struct Uniform
+{
+	void* data{ nullptr };
+	size_t size{ 0 };
+	std::type_index{};
+};
+
+The pros:
+	- the struct is smaller
+	- should make it easy to put in a container
+
+The cons:
+	- i'll have to manually allocate memory into this data pointer,
+	  with the chance of causing memory leaks
+	- this method does differ a bit from the shader language,
+	(single uniform struct in shader vs collection of structs in code)
+
