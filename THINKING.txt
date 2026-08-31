@@ -123,10 +123,11 @@ struct Uniform
 	void* data{ nullptr };
 	size_t size{ 0 };
 	std::type_index{};
+	std::function<void(void*)> destroy{}	=> need this in order to still call the right destructor (delete void* is UB)
 };
 
 The pros:
-	- the struct is smaller
+	- the struct is a bit smaller
 	- should make it easy to put in a container
 
 The cons:
