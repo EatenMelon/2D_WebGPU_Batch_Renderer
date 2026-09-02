@@ -24,6 +24,7 @@ namespace wgpu
 	class BindGroupLayout final
 	{
 	public:
+
 		template<typename T>
 		bool AddUniformEntry(int binding, BindingVisibility visibility);
 		bool AddTextureEntry(int binding);
@@ -51,11 +52,17 @@ namespace wgpu
 	private:
 		WGPUShaderStage GetShaderStage(BindingVisibility visibility);
 
-		typedef std::pair<std::type_index, WGPUBindGroupLayoutEntry> UniformEntry;
+		struct UniformEntry
+		{
+			int location{};
+			uint64_t size{};
+			std::type_index typeIndex{ typeid(void*) };
+		};
 
 		WGPUBindGroupLayout m_BindGroupLayout{ nullptr };
 
-		std::unique_ptr<UniformEntry> m_UniformEntry{ nullptr };
+		std::vector<UniformEntry> m_UniformEntries{};
+		uint64_t m_UniformBufferSize{ 0 };
 		std::unordered_map<int, WGPUBindGroupLayoutEntry> m_Entries{};
 		std::unique_ptr<WGPUBindGroupLayoutEntry> m_FrameEntry{ nullptr };
 
@@ -64,18 +71,16 @@ namespace wgpu
 
 	// could be moved to a .inl file, which is a type of header file for inline functions
 	template<typename T>
-	inline bool BindGroupLayout::AddUniformEntry(int binding, BindingVisibility visibility)
+	inline bool BindGroupLayout::AddUniformEntry(int binding, [[maybe_unused]] BindingVisibility visibility)
 	{
 		if (IsLocked()) return false;
+
+		UniformEntry newEntry;
+		newEntry.location = binding;
+		newEntry.size = sizeof(T);
+		newEntry.typeIndex = typeid(T);
 		
-		WGPUBindGroupLayoutEntry entry{};
-
-		entry.binding = binding;
-		entry.visibility = GetShaderStage(visibility);
-		entry.buffer.type = WGPUBufferBindingType_Uniform;
-		entry.buffer.minBindingSize = sizeof(T);
-
-		m_UniformEntry = std::make_unique<UniformEntry>(typeid(T), entry);
+		m_UniformEntries.push_back(newEntry);
 
 		return true;
 	}
@@ -83,10 +88,9 @@ namespace wgpu
 	template<typename T>
 	inline int BindGroupLayout::GetUniformEntryBinding() const
 	{
-		if (m_UniformEntry == nullptr) return -1;
-		if (m_UniformEntry->first != typeid(T)) return -1;
+		if (m_UniformEntries.size() <= 0) return -1;
 
-		return m_UniformEntry->second.binding;
+		return 0;
 	}
 
 	

@@ -53,7 +53,7 @@ bool wgpu::BindGroupLayout::AddFrameEntry(int binding)
 
 bool wgpu::BindGroupLayout::RequiresUniform() const
 {
-	return m_UniformEntry != nullptr;
+	return m_UniformEntries.size() > 0;
 }
 
 int wgpu::BindGroupLayout::GetFrameEntryBinding() const
@@ -69,9 +69,29 @@ void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 
 	std::vector<WGPUBindGroupLayoutEntry> entries{};
 
-	if (m_UniformEntry != nullptr)
+	if (m_UniformEntries.size() > 0)
 	{
-		entries.push_back(m_UniformEntry->second);
+		std::ranges::sort
+		(
+			m_UniformEntries,
+			[](const UniformEntry& a, const UniformEntry& b)
+			{
+				return a.location < b.location;
+			}
+		);
+
+		WGPUBindGroupLayoutEntry entry{};
+		entry.binding = 0;
+		entry.visibility = GetShaderStage(BindingVisibility::Both);
+		entry.buffer.type = WGPUBufferBindingType_Uniform;
+
+		for (const auto& uniformEntry : m_UniformEntries)
+		{
+			m_UniformBufferSize += uniformEntry.size;
+		}
+
+		entry.buffer.minBindingSize = m_UniformBufferSize;
+		entries.push_back(entry);
 	}
 
 	for (const auto& [binding, entry] : m_Entries)
@@ -104,12 +124,7 @@ void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 
 uint64_t wgpu::BindGroupLayout::GetRequiredUniformBufferSize() const
 {
-	if (m_UniformEntry == nullptr)
-	{
-		return 0;
-	}
-
-	return m_UniformEntry->second.buffer.minBindingSize;
+	return m_UniformBufferSize;
 }
 
 WGPUShaderStage wgpu::BindGroupLayout::GetShaderStage(BindingVisibility visibility)

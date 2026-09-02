@@ -5,6 +5,7 @@
 #include <functional>
 
 #include "Pipeline.h"
+#include "Uniforms.h"
 
 namespace wgpu
 {
