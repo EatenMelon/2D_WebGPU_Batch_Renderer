@@ -7,9 +7,19 @@
 #include "GraphicsContext.h"
 #include <Renderer2D.h>
 
+void wgpu::BindGroupLayout::SetUniformCount(size_t count)
+{
+	m_UniformEntries.resize(count);
+}
+
 bool wgpu::BindGroupLayout::AddTextureEntry(int binding)
 {
 	if (IsLocked()) return false;
+
+	if (binding == m_UniformBinding)
+	{
+		throw std::runtime_error("Cannot bind texture to a binding reserved for uniforms");
+	}
 
 	WGPUBindGroupLayoutEntry entry{};
 	entry.binding = binding;
@@ -26,6 +36,11 @@ bool wgpu::BindGroupLayout::AddSamplerEntry(int binding)
 {
 	if (IsLocked()) return false;
 
+	if (binding == m_UniformBinding)
+	{
+		throw std::runtime_error("Cannot bind samplers to a binding reserved for uniforms");
+	}
+
 	WGPUBindGroupLayoutEntry entry{};
 	entry.binding = binding;
 	entry.visibility = WGPUShaderStage_Fragment;
@@ -40,6 +55,11 @@ bool wgpu::BindGroupLayout::AddFrameEntry(int binding)
 {
 	if (IsLocked()) return false;
 
+	if (binding == m_UniformBinding)
+	{
+		throw std::runtime_error("Cannot bind framebuffers to a binding reserved for uniforms");
+	}
+
 	WGPUBindGroupLayoutEntry entry{};
 	entry.binding = binding;
 	entry.visibility = WGPUShaderStage_Fragment;
@@ -49,11 +69,6 @@ bool wgpu::BindGroupLayout::AddFrameEntry(int binding)
 	m_FrameEntry = std::make_unique<WGPUBindGroupLayoutEntry>(entry);
 
 	return true;
-}
-
-bool wgpu::BindGroupLayout::RequiresUniform() const
-{
-	return m_UniformEntries.size() > 0;
 }
 
 int wgpu::BindGroupLayout::GetFrameEntryBinding() const
@@ -71,18 +86,9 @@ void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 
 	if (m_UniformEntries.size() > 0)
 	{
-		std::ranges::sort
-		(
-			m_UniformEntries,
-			[](const UniformEntry& a, const UniformEntry& b)
-			{
-				return a.location < b.location;
-			}
-		);
-
 		WGPUBindGroupLayoutEntry entry{};
 		entry.binding = 0;
-		entry.visibility = GetShaderStage(BindingVisibility::Both);
+		entry.visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
 		entry.buffer.type = WGPUBufferBindingType_Uniform;
 
 		for (const auto& uniformEntry : m_UniformEntries)
@@ -122,26 +128,12 @@ void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 	m_BindGroupLayout = wgpuDeviceCreateBindGroupLayout(m_Context->GetDevice(), &desc);
 }
 
+bool wgpu::BindGroupLayout::RequiresUniform() const
+{
+	return m_UniformEntries.size() > 0;
+}
+
 uint64_t wgpu::BindGroupLayout::GetRequiredUniformBufferSize() const
 {
 	return m_UniformBufferSize;
-}
-
-WGPUShaderStage wgpu::BindGroupLayout::GetShaderStage(BindingVisibility visibility)
-{
-	switch (visibility)
-	{
-	case wgpu::BindingVisibility::VertexShaderStage:
-		return WGPUShaderStage_Vertex;
-
-	case wgpu::BindingVisibility::FragmentShaderStage:
-		return WGPUShaderStage_Fragment;
-
-	case wgpu::BindingVisibility::Both:
-		return WGPUShaderStage_Fragment | WGPUShaderStage_Vertex;
-
-	default: break;
-	}
-	
-	return WGPUShaderStage_None;
 }

@@ -25,6 +25,7 @@ namespace wgpu
 
 		template<typename T>
 		bool SetUniform(int binding, T value);
+
 		bool SetTexture(int binding, const Texture2D* texture);
 		bool SetSampler(int binding, const Sampler* sampler);
 		bool SetFrame(int binding, WGPUTextureView frameTextureView);
