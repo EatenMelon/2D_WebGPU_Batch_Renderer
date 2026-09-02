@@ -4,7 +4,6 @@
 #include "GraphicsContext.h"
 #include "Renderer2D.h"
 #include "Material.h"
-#include "BuiltinResources.h"
 
 wgpu::Texture2D::Texture2D(const Renderer2D& renderer, const std::filesystem::path& path)
 	: m_Renderer{ &renderer }
@@ -69,16 +68,10 @@ wgpu::Texture2D::Texture2D(const Renderer2D& renderer, const std::filesystem::pa
 
 	m_TextureView = wgpuTextureCreateView(m_Texture, nullptr);
 	SDL_DestroySurface(surface);
-
-	m_Material = m_Renderer->GetBuiltinResources()->CreateTextureMaterial();
-	m_Material->SetTexture(1, this);
-	m_Material->SetSampler(2, m_Renderer->GetBuiltinResources()->GetNearestSampler());
 }
 
 wgpu::Texture2D::~Texture2D() noexcept
 {
-	m_Material.reset();
-
 	wgpuTextureViewRelease(m_TextureView);
 	wgpuTextureDestroy(m_Texture);
 	wgpuTextureRelease(m_Texture);
@@ -87,23 +80,6 @@ wgpu::Texture2D::~Texture2D() noexcept
 void wgpu::Texture2D::SetColorMultiplier(const ColorF& color)
 {
 	m_ColorMultiplier = color;
-}
-
-void wgpu::Texture2D::SelectSampler(Sampler::Preset preset)
-{
-	auto sampler{ m_Renderer->GetBuiltinResources()->GetLinearSampler() };
-
-	switch (preset)
-	{
-	case Sampler::Preset::Nearest:
-		sampler = m_Renderer->GetBuiltinResources()->GetNearestSampler();
-		break;
-
-	default:
-		break;
-	}
-
-	m_Material->SetSampler(2, sampler);
 }
 
 wgpu::RectF wgpu::Texture2D::GetCutout(const RectF& src) const

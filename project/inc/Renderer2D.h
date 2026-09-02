@@ -15,7 +15,6 @@ namespace wgpu
 	class RenderQueue;
 	class GraphicsContext;
 	class Material;
-	class BuiltinResources;
 
 	class Renderer2D final
 	{
@@ -45,10 +44,6 @@ namespace wgpu
 		WGPUTexture GetDepthTexture() const { return m_DepthTexture; }
 
 		const GraphicsContext* GetContext() const { return m_Context.get(); }
-		const BuiltinResources* GetBuiltinResources() const { return m_BuiltinResources.get(); }
-
-		// temp
-		Material* GetSolidColorMaterial() const;
 
 	private:
 		void ImGuiInit();
@@ -96,7 +91,6 @@ namespace wgpu
 
 
 		std::unique_ptr<GraphicsContext> m_Context{ nullptr };
-		std::unique_ptr<BuiltinResources> m_BuiltinResources{ nullptr };
 	};
 }
 

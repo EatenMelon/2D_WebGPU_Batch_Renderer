@@ -5,7 +5,6 @@
 
 #include "GraphicsContext.h"
 #include "RenderQueue.h"
-#include "BuiltinResources.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_wgpu.h>
@@ -18,8 +17,6 @@ wgpu::Renderer2D::Renderer2D(SDL_Window* window)
 	InitDepthBuffer();
 	CreateVertexBuffer(100 * sizeof(Vertex3D));
 	CreateIndexBuffer(50 * sizeof(uint32_t));
-
-	m_BuiltinResources = std::make_unique<BuiltinResources>(*this);
 
 	InitPostProcessingData();
 	ImGuiInit();
@@ -194,13 +191,6 @@ void wgpu::Renderer2D::Resize()
 
 	DestroyPostProcessingData();
 	InitPostProcessingData();
-
-	//m_Camera->SetAspectRatio(m_Context->GetAspectRatio());
-}
-
-wgpu::Material* wgpu::Renderer2D::GetSolidColorMaterial() const
-{
-	return m_BuiltinResources->GetSolidColorMaterial();
 }
 
 void wgpu::Renderer2D::ImGuiInit()

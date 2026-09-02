@@ -114,25 +114,7 @@ int main()
 	wgpu::Camera2D camera{};
 	camera.SetAspectRatio(static_cast<float>(size.x) / size.y);
 
-	wgpu::Texture2D sprite{ renderer, "resources/Sprite.png" };
-	auto material = renderer.GetSolidColorMaterial();
-
-	const int bindingColor = material->GetUniformBinding<wgpu::CameraData>();
-	material->SetUniform<wgpu::CameraData>(bindingColor, camera.GetCameraData());
-
-	const int bindingSprite = sprite.GetMaterial()->GetUniformBinding<wgpu::CameraData>();
-	sprite.GetMaterial()->SetUniform<wgpu::CameraData>(bindingColor, camera.GetCameraData());
-
-	wgpu::Shader ppShader{ renderer, "resources/PostInverse.wgsl" };
-	wgpu::BindGroupLayout ppLayout{};
-	ppLayout.AddFrameEntry(0);
-	ppLayout.ConfirmLayout(renderer);
-
-	wgpu::Pipeline ppPipeline{ ppShader, wgpu::Pipeline::Type::PostProcessing, &ppLayout };
-	wgpu::Material ppMaterial{ ppPipeline };
-
 	wgpu::Mesh3D mesh{};
-	bool invertColors{ false };
 
 	// main loop
 	bool isRunning{ true };
@@ -171,74 +153,21 @@ int main()
 
 			if (updateMaterials)
 			{
-				material->SetUniform<wgpu::CameraData>(bindingColor, camera.GetCameraData());
-				sprite.GetMaterial()->SetUniform<wgpu::CameraData>(bindingSprite, camera.GetCameraData());
+
 			}
 		}
 		
 		renderer.BeginFrame();
 		{
-			float time = SDL_GetTicks() / 1000.f;
-			const float pi{ 3.14f };
-
-			float scale{ 0.33f };
-			float angle{ time };
-
-			glm::vec3 pos{ scale * cosf(angle), scale * sinf(angle), 1.f };
-			LoadStar(mesh, pos, wgpu::ColorF(0.f, 1.f, 0.f, 0.5f));
-			renderer.BatchMesh(material, mesh);
 			
-			LoadQuad(mesh, glm::vec3(-0.5f, 0.f, 0.f), wgpu::ColorF(0.f, 1.f, 0.f));
-			renderer.BatchMesh(sprite.GetMaterial(), mesh);
-
-			angle += pi / 2.f;
-			pos = glm::vec3(scale * cosf(angle), scale * sinf(angle), 1.f);
-			LoadStar(mesh, pos, wgpu::ColorF(0.f, 0.f, 1.f, 0.5f));
-			renderer.BatchMesh(material, mesh);
-			
-			LoadQuad(mesh, glm::vec3(0.5f, 0.f, 0.f), wgpu::ColorF(0.f, 0.f, 1.f));
-			renderer.BatchMesh(sprite.GetMaterial(), mesh);
-
-			angle += pi / 2.f;
-			pos = glm::vec3(scale * cosf(angle), scale * sinf(angle), 1.f);
-			LoadStar(mesh, pos, wgpu::ColorF(0.f, 1.f, 1.f, 0.5f));
-			renderer.BatchMesh(material, mesh);
-
-			LoadQuad(mesh, glm::vec3(0.f, 0.5f, 0.f), wgpu::ColorF(0.f, 1.f, 1.f));
-			renderer.BatchMesh(sprite.GetMaterial(), mesh);
-
-			angle += pi / 2.f;
-			pos = glm::vec3(scale * cosf(angle), scale * sinf(angle), 1.f);
-			LoadStar(mesh, pos, wgpu::ColorF(1.f, 0.f, 1.f, 0.5f));
-			renderer.BatchMesh(material, mesh);
-
-			LoadQuad(mesh, glm::vec3(0.f, -0.5f, 0.f), wgpu::ColorF(1.f, 0.f, 1.f));
-			renderer.BatchMesh(sprite.GetMaterial(), mesh);
 		}
 		renderer.EndFrame();
 
 		renderer.GuiBeginFrame();
 		{
-			ImGui::Begin("Renderer");
-			{
-				if (ImGui::RadioButton("Post Processing Effects", invertColors))
-				{
-					invertColors = !invertColors;
-				}
-			}
-			ImGui::End();
+
 		}
 		renderer.GuiEndFrame();
-		
-		// just to show that multiple effects can be layered
-		if (invertColors)
-		{
-			renderer.SubmitPostProcessingEffect(&ppMaterial);
-			renderer.SubmitPostProcessingEffect(&ppMaterial);
-			renderer.SubmitPostProcessingEffect(&ppMaterial);
-			renderer.SubmitPostProcessingEffect(&ppMaterial);
-			renderer.SubmitPostProcessingEffect(&ppMaterial);
-		}
 		
 		renderer.Render();
 	}

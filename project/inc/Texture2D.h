@@ -26,13 +26,11 @@ namespace wgpu
 		Texture2D& operator=(Texture2D&&) = delete;
 
 		void SetColorMultiplier(const ColorF& color);
-		void SelectSampler(Sampler::Preset preset);
 
 		RectF GetCutout(const RectF& src) const;
 
 		glm::vec2 GetSize() const;
 		ColorF GetColorMultiplier() const;
-		Material* GetMaterial() const { return m_Material.get(); }
 
 		WGPUTextureView GetView() const { return m_TextureView; }
 
@@ -40,7 +38,6 @@ namespace wgpu
 
 		glm::vec2 m_Size{ 1.f, 1.f };
 		ColorF m_ColorMultiplier{ 1.f, 1.f, 1.f };
-		std::unique_ptr<Material> m_Material{ nullptr };
 
 		WGPUTexture m_Texture{ nullptr };
 		WGPUTextureView m_TextureView{ nullptr };
