@@ -155,12 +155,12 @@ int main()
 				break;
 
 			case SDL_EVENT_MOUSE_MOTION:
-				if (event.motion.state & SDL_BUTTON_LEFT)
-				{
-					const glm::vec2 motion{ -event.motion.xrel, event.motion.yrel };
-					camera.Move(motion / 1000.f);
-					updateMaterials = true;
-				}
+				if (!(event.motion.state & SDL_BUTTON_LEFT)) break;
+				
+				const glm::vec2 motion{ -event.motion.xrel, event.motion.yrel };
+				camera.Move(motion / 1000.f);
+				updateMaterials = true;
+				
 				break;
 			}
 

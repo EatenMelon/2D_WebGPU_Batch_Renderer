@@ -120,15 +120,14 @@ void wgpu::Material::UpdateUniformBuffer()
 			wgpuQueueWriteBuffer(queue, m_UniformBuffer, offset, var->GetData(), var->GetSize());
 
 			offset += var->GetSize();
-		}
-		else
-		{
-			size_t size = layout->GetUniformSize(idx);
-			wgpuQueueWriteBuffer(queue, m_UniformBuffer, offset, empty.data(), size);
-
-			offset += size;
+			continue;
 		}
 
+		// setting uniform variable as null
+		const size_t size = layout->GetUniformSize(idx);
+		wgpuQueueWriteBuffer(queue, m_UniformBuffer, offset, empty.data(), size);
+
+		offset += size;
 	}
 
 	m_UpdateUniformBuffer = false;
