@@ -1,6 +1,8 @@
 #ifndef _UNIFORMS
 #define _UNIFORMS
 
+#include <cstddef>
+
 namespace wgpu
 {
 	class IUniform
@@ -8,24 +10,24 @@ namespace wgpu
 	public:
 		virtual ~IUniform() = default;
 
-		virtual void* GetData() const = 0;
+		virtual const void* GetData() const = 0;
 		virtual size_t GetSize() const = 0;
 	};
 
 	template<typename T>
-	class UniformType final : public IUniform
+	class TypedUniform final : public IUniform
 	{
 	public:
-		UniformType() = default;
+		TypedUniform() = default;
 
-		UniformType(const UniformType&) = delete;
-		UniformType& operator=(const UniformType&) = delete;
-		UniformType(UniformType&&) = delete;
-		UniformType& operator=(UniformType&&) = delete;
+		TypedUniform(const TypedUniform&) = delete;
+		TypedUniform& operator=(const TypedUniform&) = delete;
+		TypedUniform(TypedUniform&&) = delete;
+		TypedUniform& operator=(TypedUniform&&) = delete;
 
-		void* GetData() const override
+		const void* GetData() const override
 		{
-			return static_cast<void*>(&m_Value);
+			return static_cast<const void*>(&m_Value);
 		}
 
 		size_t GetSize() const override

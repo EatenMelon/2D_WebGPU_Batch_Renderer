@@ -35,8 +35,11 @@ namespace wgpu
 		bool IsLocked() const { return m_BindGroupLayout != nullptr; }
 
 		template<typename T>
+		int GetUniformLocation() const;
+
 		int GetUniformEntryBinding() const;
-		bool RequiresUniform() const;
+		size_t GetUniformCount() const;
+		uint64_t GetUniformSize(size_t location) const;
 		uint64_t GetRequiredUniformBufferSize() const;
 
 		WGPUBindGroupLayout GetLayout() const { return m_BindGroupLayout; }
@@ -73,19 +76,27 @@ namespace wgpu
 		newEntry.size = sizeof(T);
 		newEntry.typeIndex = typeid(T);
 		
-		m_UniformEntries.push_back(newEntry);
+		m_UniformEntries[location] = newEntry;
 
 		return true;
 	}
 
 	template<typename T>
-	inline int BindGroupLayout::GetUniformEntryBinding() const
+	inline int BindGroupLayout::GetUniformLocation() const
 	{
 		if (m_UniformEntries.size() <= 0) return -1;
+		
+		const auto& typeIdx = typeid(T);
 
-		return m_UniformBinding;
+		for (size_t idx{ 0 }; idx < m_UniformEntries.size(); ++idx)
+		{
+			if (m_UniformEntries[idx].typeIndex != typeIdx) continue;
+
+			return idx;
+		}
+
+		return -1;
 	}
-
 	
 }
 

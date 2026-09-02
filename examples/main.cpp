@@ -114,6 +114,19 @@ int main()
 	wgpu::Camera2D camera{};
 	camera.SetAspectRatio(static_cast<float>(size.x) / size.y);
 
+	wgpu::BindGroupLayout layout{};
+	layout.SetUniformCount(2);
+	layout.AddUniformLocation<wgpu::CameraData>(0);
+	layout.AddUniformLocation<wgpu::ColorF>(1);
+	layout.ConfirmLayout(renderer);
+
+	wgpu::Shader shader{ renderer, "resources/SolidColor.wgsl" };
+	wgpu::Pipeline pipeline{ shader, wgpu::Pipeline::Type::GeometryTransparent, &layout };
+	wgpu::Material material{ pipeline };
+
+	material.SetUniform<wgpu::ColorF>(1, wgpu::ColorF{ 0.5f, 0.7f, 0.f });
+	material.SetUniform<wgpu::CameraData>(0, camera.GetCameraData());
+
 	wgpu::Mesh3D mesh{};
 
 	// main loop
@@ -153,13 +166,14 @@ int main()
 
 			if (updateMaterials)
 			{
-
+				material.SetUniform<wgpu::CameraData>(0, camera.GetCameraData());
 			}
 		}
 		
 		renderer.BeginFrame();
 		{
-			
+			LoadStar(mesh, glm::vec3{ 0, 0, 0 }, wgpu::ColorF{ 1.f, 1.f, 0.f, 1.f });
+			renderer.BatchMesh(&material, mesh);
 		}
 		renderer.EndFrame();
 

@@ -24,14 +24,16 @@ namespace wgpu
 		Material& operator=(Material&&) = delete;
 
 		template<typename T>
-		bool SetUniform(int binding, T value);
+		bool SetUniform(size_t location, const T& value);
 
 		bool SetTexture(int binding, const Texture2D* texture);
 		bool SetSampler(int binding, const Sampler* sampler);
 		bool SetFrame(int binding, WGPUTextureView frameTextureView);
 
+		int GetUniformBinding() const;
+
 		template<typename T>
-		int GetUniformBinding();
+		int GetUniformLocation() const;
 
 		WGPUBindGroup GetBindGroup();
 		const Pipeline* GetPipeline() const { return m_Pipeline; }
@@ -40,23 +42,12 @@ namespace wgpu
 		void UpdateUniformBuffer();
 		void UpdateBindgroup();
 
-		struct Uniform
-		{
-			std::any any{};
-			size_t size{};
-			int binding{};
-			std::function<void* (std::any&)> GetData{};
-		};
-
-		template<typename T>
-		Uniform CreateUniform(int binding, const T& value) const;
-
 		WGPUBindGroup m_BindGroup{ nullptr };
 		WGPUBuffer m_UniformBuffer{ nullptr };
 		bool m_UpdateBindGroup{ true };
 		bool m_UpdateUniformBuffer{ true };
 
-		Uniform m_Uniform{};
+		std::vector<std::unique_ptr<IUniform>> m_Uniform{};
 		std::unordered_map<int, const Texture2D*> m_Textures{};
 		std::unordered_map<int, const Sampler*> m_Samplers{};
 
@@ -72,55 +63,40 @@ namespace wgpu
 	};
 
 	template<typename T>
-	inline bool Material::SetUniform(int binding, T value)
+	inline bool Material::SetUniform(size_t location, const T& value)
 	{
-		const auto layout = m_Pipeline->GetBindGroupLayout();
-		const int requiredBinding = layout->GetUniformEntryBinding<T>();
+		if (m_Uniform.empty()) return false;
 
-		if (requiredBinding < 0) return false;
-		if (binding != requiredBinding) return false;
-		
-		m_Uniform = CreateUniform(binding, value);
+		const auto layout = m_Pipeline->GetBindGroupLayout();
+
+		if (layout->GetUniformCount() == 0) return false;
+
+		if (location < 0) return false;
+
+		auto& base = m_Uniform[location];
+
+		if (base == nullptr)
+		{
+			base = std::make_unique<TypedUniform<T>>();
+		}
+
+		auto typed = static_cast<TypedUniform<T>*>(base.get());
+
+		typed->SetValue(value);
+
 		m_UpdateUniformBuffer = true;
 
 		return true;
 	}
 
 	template<typename T>
-	inline int Material::GetUniformBinding()
+	inline int Material::GetUniformLocation() const
 	{
-		auto layout = m_Pipeline->GetBindGroupLayout();
+		const auto layout = m_Pipeline->GetBindGroupLayout();
 
-		if (layout == nullptr)
-		{
-			return -1;
-		}
+		if (layout->GetUniformCount() == 0) return -1;
 
-		return layout->GetUniformEntryBinding<T>();
-	}
-
-	template<typename T>
-	inline Material::Uniform Material::CreateUniform(int binding, const T& value) const
-	{
-		Uniform uniform{};
-
-		uniform.any = value;
-		uniform.size = sizeof(T);
-		uniform.binding = binding;
-
-		uniform.GetData = [](std::any& value) -> void*
-			{
-				auto* ptr = std::any_cast<T>(&value);
-
-				if (ptr != nullptr)
-				{
-					return static_cast<void*>(ptr);
-				}
-
-				return nullptr;
-			};
-
-		return uniform;
+		return layout->GetUniformLocation<T>();
 	}
 }
 

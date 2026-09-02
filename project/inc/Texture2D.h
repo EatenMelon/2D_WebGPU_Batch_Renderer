@@ -12,7 +12,6 @@ namespace wgpu
 {
 	class Renderer2D;
 	class GraphicsContext;
-	class Material;
 	
 	class Texture2D final
 	{

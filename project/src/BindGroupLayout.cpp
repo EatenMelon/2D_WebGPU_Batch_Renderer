@@ -87,7 +87,7 @@ void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 	if (m_UniformEntries.size() > 0)
 	{
 		WGPUBindGroupLayoutEntry entry{};
-		entry.binding = 0;
+		entry.binding = m_UniformBinding;
 		entry.visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
 		entry.buffer.type = WGPUBufferBindingType_Uniform;
 
@@ -128,9 +128,24 @@ void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 	m_BindGroupLayout = wgpuDeviceCreateBindGroupLayout(m_Context->GetDevice(), &desc);
 }
 
-bool wgpu::BindGroupLayout::RequiresUniform() const
+int wgpu::BindGroupLayout::GetUniformEntryBinding() const
 {
-	return m_UniformEntries.size() > 0;
+	if (m_UniformEntries.size() <= 0) return -1;
+
+	return m_UniformBinding;
+}
+
+size_t wgpu::BindGroupLayout::GetUniformCount() const
+{
+	return m_UniformEntries.size();
+}
+
+uint64_t wgpu::BindGroupLayout::GetUniformSize(size_t location) const
+{
+	if (location >= m_UniformEntries.size()) return 0;
+
+	return m_UniformEntries[location].size;
+
 }
 
 uint64_t wgpu::BindGroupLayout::GetRequiredUniformBufferSize() const

@@ -7,9 +7,12 @@
 wgpu::Material::Material(const Pipeline& pipeline)
 	: m_Pipeline{ &pipeline }
 {
+
 	auto bindGroupLayout = m_Pipeline->GetBindGroupLayout();
 
 	if (bindGroupLayout == nullptr) return;
+
+	m_Uniform.resize(bindGroupLayout->GetUniformCount());
 
     WGPUBufferDescriptor bufferDesc{};
     bufferDesc.nextInChain = nullptr;
@@ -74,6 +77,18 @@ bool wgpu::Material::SetFrame(int binding, WGPUTextureView frameTextureView)
 	return true;
 }
 
+int wgpu::Material::GetUniformBinding() const
+{
+	auto layout = m_Pipeline->GetBindGroupLayout();
+
+	if (layout == nullptr)
+	{
+		return -1;
+	}
+
+	return layout->GetUniformEntryBinding();
+}
+
 WGPUBindGroup wgpu::Material::GetBindGroup()
 {
 	UpdateUniformBuffer();
@@ -85,17 +100,36 @@ WGPUBindGroup wgpu::Material::GetBindGroup()
 void wgpu::Material::UpdateUniformBuffer()
 {
 	if (!m_UpdateUniformBuffer) return;
-	if (!m_Uniform.any.has_value()) return;
+	if (m_Uniform.empty()) return;
+
+	const auto layout = m_Pipeline->GetBindGroupLayout();
+
+	if (layout == nullptr) return;
+
+	std::vector<uint8_t> empty(layout->GetRequiredUniformBufferSize(), NULL);
 
 	const auto queue = m_Pipeline->GetContext()->GetQueue();
-	wgpuQueueWriteBuffer
-	(
-		queue,
-		m_UniformBuffer,
-		0,
-		m_Uniform.GetData(m_Uniform.any),
-		m_Uniform.size
-	);
+
+	uint64_t offset{ 0 };
+	for (size_t idx{ 0 }; idx < m_Uniform.size(); ++idx)
+	{
+		const auto& var = m_Uniform[idx];
+
+		if (var != nullptr)
+		{
+			wgpuQueueWriteBuffer(queue, m_UniformBuffer, offset, var->GetData(), var->GetSize());
+
+			offset += var->GetSize();
+		}
+		else
+		{
+			size_t size = layout->GetUniformSize(idx);
+			wgpuQueueWriteBuffer(queue, m_UniformBuffer, offset, empty.data(), size);
+
+			offset += size;
+		}
+
+	}
 
 	m_UpdateUniformBuffer = false;
 }
@@ -114,17 +148,19 @@ void wgpu::Material::UpdateBindgroup()
 
 	auto bindGroupLayout = m_Pipeline->GetBindGroupLayout();
 
-	if (m_Uniform.any.has_value() && bindGroupLayout->RequiresUniform())
+	bool requiresUniform = bindGroupLayout->GetUniformCount() != 0;
+
+	if (!m_Uniform.empty() && requiresUniform)
 	{
 		WGPUBindGroupEntry entry{};
 
-		entry.binding = m_Uniform.binding;
+		entry.binding = bindGroupLayout->GetUniformEntryBinding();
 		entry.buffer = m_UniformBuffer;
 		entry.offset = 0;
-		entry.size = m_Uniform.size;
+		entry.size = bindGroupLayout->GetRequiredUniformBufferSize();
 		bindings.push_back(entry);
 	}
-	else if (bindGroupLayout->RequiresUniform())
+	else if (requiresUniform)
 	{
 		throw std::runtime_error("The uniform required has not been set!");
 	}
