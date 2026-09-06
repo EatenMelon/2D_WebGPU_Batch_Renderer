@@ -3,6 +3,7 @@
 #include "Texture2D.h"
 #include "Sampler.h"
 #include "GraphicsContext.h"
+#include "Helper.h"
 
 wgpu::Material::Material(const Pipeline& pipeline)
 	: m_Pipeline{ &pipeline }
@@ -110,7 +111,9 @@ void wgpu::Material::UpdateUniformBuffer()
 
 	const auto queue = m_Pipeline->GetContext()->GetQueue();
 
+	constexpr uint64_t alignment{ 16 };
 	uint64_t offset{ 0 };
+
 	for (size_t idx{ 0 }; idx < m_Uniform.size(); ++idx)
 	{
 		const auto& var = m_Uniform[idx];
@@ -119,7 +122,7 @@ void wgpu::Material::UpdateUniformBuffer()
 		{
 			wgpuQueueWriteBuffer(queue, m_UniformBuffer, offset, var->GetData(), var->GetSize());
 
-			offset += var->GetSize();
+			offset += helper::Align(var->GetSize(), alignment);
 			continue;
 		}
 
@@ -127,7 +130,7 @@ void wgpu::Material::UpdateUniformBuffer()
 		const size_t size = layout->GetUniformSize(idx);
 		wgpuQueueWriteBuffer(queue, m_UniformBuffer, offset, empty.data(), size);
 
-		offset += size;
+		offset += helper::Align(size, alignment);
 	}
 
 	m_UpdateUniformBuffer = false;

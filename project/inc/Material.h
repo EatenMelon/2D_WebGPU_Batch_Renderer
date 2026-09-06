@@ -71,8 +71,6 @@ namespace wgpu
 
 		if (layout->GetUniformCount() == 0) return false;
 
-		if (location < 0) return false;
-
 		auto& base = m_Uniform[location];
 
 		if (base == nullptr)

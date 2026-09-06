@@ -4,8 +4,10 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include "GraphicsContext.h"
 #include <Renderer2D.h>
+
+#include "GraphicsContext.h"
+#include "Helper.h"
 
 void wgpu::BindGroupLayout::SetUniformCount(size_t count)
 {
@@ -93,7 +95,8 @@ void wgpu::BindGroupLayout::ConfirmLayout(const Renderer2D& renderer)
 
 		for (const auto& uniformEntry : m_UniformEntries)
 		{
-			m_UniformBufferSize += uniformEntry.size;
+			//m_UniformBufferSize += uniformEntry.size;
+			m_UniformBufferSize += helper::Align(uniformEntry.size, 16);
 		}
 
 		entry.buffer.minBindingSize = m_UniformBufferSize;

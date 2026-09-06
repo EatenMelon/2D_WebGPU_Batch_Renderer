@@ -124,7 +124,7 @@ int main()
 	wgpu::Pipeline pipeline{ shader, wgpu::Pipeline::Type::GeometryTransparent, &layout };
 	wgpu::Material material{ pipeline };
 
-	material.SetUniform<wgpu::ColorF>(1, wgpu::ColorF{ 0.5f, 0.7f, 0.f });
+	material.SetUniform<wgpu::ColorF>(1, wgpu::ColorF{ 0.25f, 0.7f, 0.f });
 	material.SetUniform<wgpu::CameraData>(0, camera.GetCameraData());
 
 	wgpu::Mesh3D mesh{};
