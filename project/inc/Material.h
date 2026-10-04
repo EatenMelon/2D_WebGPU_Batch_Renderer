@@ -24,7 +24,7 @@ namespace wgpu
 		Material& operator=(Material&&) = delete;
 
 		template<typename T>
-		bool SetUniform(size_t location, const T& value);
+		bool SetUniformVariable(size_t location, const T& value);
 
 		bool SetTexture(int binding, const Texture2D* texture);
 		bool SetSampler(int binding, const Sampler* sampler);
@@ -33,7 +33,7 @@ namespace wgpu
 		int GetUniformBinding() const;
 
 		template<typename T>
-		int GetUniformLocation() const;
+		int GetUniformVariableLocation() const;
 
 		WGPUBindGroup GetBindGroup();
 		const Pipeline* GetPipeline() const { return m_Pipeline; }
@@ -62,8 +62,18 @@ namespace wgpu
 		const Pipeline* m_Pipeline{ nullptr };
 	};
 
+	/// <summary>
+	/// Changes the value of a variable in the uniform of the shader used by this material
+	/// </summary>
+	/// <param name="location"> 
+	/// The indexed location of the variable, similar to how elements in an array are stored
+	/// </param>
+	/// <param name="value">
+	/// The new value for the uniform variable
+	/// </param>
+	/// <returns> True if the variable has been added successfully </returns>
 	template<typename T>
-	inline bool Material::SetUniform(size_t location, const T& value)
+	inline bool Material::SetUniformVariable(size_t location, const T& value)
 	{
 		if (m_Uniform.empty()) return false;
 
@@ -88,13 +98,13 @@ namespace wgpu
 	}
 
 	template<typename T>
-	inline int Material::GetUniformLocation() const
+	inline int Material::GetUniformVariableLocation() const
 	{
 		const auto layout = m_Pipeline->GetBindGroupLayout();
 
 		if (layout->GetUniformCount() == 0) return -1;
 
-		return layout->GetUniformLocation<T>();
+		return layout->GetUniformVariableLocation<T>();
 	}
 }
 

@@ -116,16 +116,16 @@ int main()
 
 	wgpu::BindGroupLayout layout{};
 	layout.SetUniformCount(2);
-	layout.AddUniformLocation<wgpu::CameraData>(0);
-	layout.AddUniformLocation<wgpu::ColorF>(1);
+	layout.AddUniformVariable<wgpu::CameraData>(0);
+	layout.AddUniformVariable<wgpu::ColorF>(1);
 	layout.ConfirmLayout(renderer);
 
 	wgpu::Shader shader{ renderer, "resources/SolidColor.wgsl" };
 	wgpu::Pipeline pipeline{ shader, wgpu::Pipeline::Type::GeometryTransparent, &layout };
 	wgpu::Material material{ pipeline };
 
-	material.SetUniform<wgpu::ColorF>(1, wgpu::ColorF{ 0.25f, 0.7f, 0.f });
-	material.SetUniform<wgpu::CameraData>(0, camera.GetCameraData());
+	material.SetUniformVariable<wgpu::ColorF>(1, wgpu::ColorF{ 0.25f, 0.7f, 0.f });
+	material.SetUniformVariable<wgpu::CameraData>(0, camera.GetCameraData());
 
 	wgpu::Mesh3D mesh{};
 
@@ -166,7 +166,7 @@ int main()
 
 			if (updateMaterials)
 			{
-				material.SetUniform<wgpu::CameraData>(0, camera.GetCameraData());
+				material.SetUniformVariable<wgpu::CameraData>(0, camera.GetCameraData());
 			}
 		}
 		
@@ -176,12 +176,6 @@ int main()
 			renderer.BatchMesh(&material, mesh);
 		}
 		renderer.EndFrame();
-
-		renderer.GuiBeginFrame();
-		{
-
-		}
-		renderer.GuiEndFrame();
 		
 		renderer.Render();
 	}

@@ -16,10 +16,11 @@ namespace wgpu
 	class BindGroupLayout final
 	{
 	public:
+		// Sets the number of variables your uniform will use.
 		void SetUniformCount(size_t count);
 
 		template<typename T>
-		bool AddUniformLocation(size_t location);
+		bool AddUniformVariable(size_t location);
 
 		bool AddTextureEntry(int binding);
 		bool AddSamplerEntry(int binding);
@@ -29,13 +30,13 @@ namespace wgpu
 
 		int GetFrameEntryBinding() const;
 		
-		// this locks down the BindgroupLayout, 
-		// to make it ready for use and making it immutable
+		// This locks down the BindGroupLayout, to make it ready for use.
+		// This also causes this BindGroupLayout to be locked afterwards, making it immutable.
 		void ConfirmLayout(const Renderer2D& renderer);
 		bool IsLocked() const { return m_BindGroupLayout != nullptr; }
 
 		template<typename T>
-		int GetUniformLocation() const;
+		int GetUniformVariableLocation() const;
 
 		int GetUniformEntryBinding() const;
 		size_t GetUniformCount() const;
@@ -65,9 +66,15 @@ namespace wgpu
 		const GraphicsContext* m_Context{ nullptr };
 	};
 
-	// could be moved to a .inl file, which is a type of header file for inline functions
+	/// <summary>
+	/// Adds a variable of the given type to the uniform (hasto match the shader for which it is used)
+	/// </summary>
+	/// <param name="location"> 
+	/// The indexed location of the variable, similar to how elements in an array are stored
+	/// </param>
+	/// <returns> True if the variable has been added successfully </returns>
 	template<typename T>
-	inline bool BindGroupLayout::AddUniformLocation(size_t location)
+	inline bool BindGroupLayout::AddUniformVariable(size_t location)
 	{
 		if (IsLocked()) return false;
 
@@ -82,7 +89,7 @@ namespace wgpu
 	}
 
 	template<typename T>
-	inline int BindGroupLayout::GetUniformLocation() const
+	inline int BindGroupLayout::GetUniformVariableLocation() const
 	{
 		if (m_UniformEntries.size() <= 0) return -1;
 		

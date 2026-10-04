@@ -215,6 +215,7 @@ bool wgpu::GraphicsContext::InitSurface()
 	config.device = m_Device;
 
 	config.presentMode = WGPUPresentMode_Fifo;
+	//config.alphaMode = WGPUCompositeAlphaMode_Premultiplied; => works for transparent backgrounds, not sure how tho
 	config.alphaMode = WGPUCompositeAlphaMode_Auto;
 
 	wgpuSurfaceConfigure(m_Surface, &config);
