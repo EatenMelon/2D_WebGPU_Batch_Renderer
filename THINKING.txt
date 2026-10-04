@@ -12,7 +12,7 @@ batch renderer:
 		* key => describes the GPU state required to render a group of commands
           		 (pipeline/shader, textures, blend mode, etc.)
 				=> easy solution: use the pointer to the material for this
-				(only works when materials don't change at runtime or at least not during a frame)
+				(only works when materials don't change at runtime or at least not inbetween drawcalls, which is silly anyway)
 
 		* command => contains your vertex information
 
@@ -87,15 +87,20 @@ shoving these built-in materials, pipelines and shaders in the renderer doesn't 
 
 --- vertex limits ---
 
+(this happened when working on a canvas class which i scrapped later)
 During implementing the FillEllipse function, i encountered some limitations of my vertex buffer;
 
 Currently i'm using one vertex buffer which has a decent chance of overflowing the device limits.
 Since i'm batching anyways, i can make a new vertex buffer before it ends up overflowing...
 
-So i'll have to be more carefull while iterating over batches in the renderQueue.
-
-(the renderqueue can handle about 6'720'048 vertices atm, so it should be fine for now)
 famous last words: "I'll fix it later!"
+
+maximum buffer size = 268,435,456 bytes
+the Vertex3D struct is 36 bytes
+268,435,456 / 36 = 7.456.540 vertices that can be used per frame
+
+to avoid this problem for a while longer, i added an index buffer which can avoid duplicate data
+for example a quad can be 6 vertices or 4 vertices and 6 indices.
 
 --- more uniform ---
 
@@ -136,3 +141,14 @@ The cons:
 	- this method does differ a bit from the shader language,
 	(single uniform struct in shader vs collection of structs in code)
 
+... or i can just make this a template class, for some reason this took way longer for me to realise
+
+-- new way of batching --
+
+instead of using an unordered map i use a vectors, one for vertices, one for indices, and one for batch structs
+
+batch structs contain the first vertex and index, and also the number of indices to itterate over.
+now i don't need to reconstruct vectors for batches, i just have to sort once and then upload to the buffers,
+and since Webgpu's draw indexed function matches this struct i can just add batches, vertices and indices without
+worrying about multiple indices being the same and/or pointing to the wrong vertices
+(since this function start at first vertex and indices only effect the vertices after that one)

@@ -35,13 +35,6 @@ namespace wgpu
 		glm::vec2 uv{};
 	};
 
-	struct Vertex2D
-	{
-		glm::vec2 position{};
-		ColorF color{};
-		glm::vec2 uv{};
-	};
-
 	struct Mesh3D
 	{
 		std::vector<Vertex3D> vertices{};
